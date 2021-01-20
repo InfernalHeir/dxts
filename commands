@@ -1,0 +1,63 @@
+ssh -i "Fuelupeducation.pem" ubuntu@ec2-3-7-68-203.ap-south-1.compute.amazonaws.com
+
+ ssh -i "admin_chinmay.pem" ubuntu@ec2-13-232-104-70.ap-south-1.compute.amazonaws.com
+ 
+This table will be used for managing Income_scheme for the application.
+type [referal_joining,withdrwal,monthlyroi,table_income]
+
+sequelize model:create --name Income_scheme --attributes level:INTEGER,type:string,percentage:FLOAT 
+
+
+sequelize model:create --name User --attributes firstName:string,lastName:string,password:string,email:string,eth_user_walletaddress:string,eth_user_keys:string,mobile_no:INTEGER,parent_id:string,dollar_amount_invested:FLOAT,token_market_price:FLOAT,token_deposited:FLOAT,account_status:string,user_application_wallet:FLOAT,ethereum_blockchain_txid:string
+
+
+sequelize model:create --name user_Realtion --attributes level:INTEGER,parent_id:INTEGER,child_id:INTEGER
+
+type [referal_joining,withdrwal,monthlyroi,table_income]
+sequelize model:create --name Reward --attributes type:string,from:INTEGER,reason:string,isWithdrawal:boolean,amount_left:FLOAT 
+
+
+sequelize model:create --name Invenstment_amount --attributes min_amount_dollar:INTEGER,max_amount_dollar:INTEGER
+
+
+sequelize model:create --name Monthly_return --attributes Monthly_return_percentage:FLOAT,principal_returns_wallet:FLOAT,profit_bonus_wallet:FLOAT,cold_wallet:FLOAT 
+
+sequelize-cli seed:generate --name referal-Income
+
+sequelize-cli migration:generate --name 'Add coloum to,amount.percentageinReawrdTable'
+sequelize-cli migration:generate --name 'Add coloum  reward in ReawrdTable'
+
+sequelize db:seed --seed  20200703113701-monthly-Income.js
+
+npm run createDB
+
+npm run migrations
+
+npm run seeders
+
+npm start
+
+sequelize model:create --name user_Investment --attributes userId:INTEGER,dollar_amount_invested:FLOAT,token_market_price:FLOAT,token_deposited:FLOAT,account_status:string,ethereum_blockchain_txid:string
+
+sequelize model:create --name airDrop --attributes airdropDollarAmoount:FLOAT 
+
+sequelize-cli seed:generate --name default-airDrop
+
+sequelize db:seed --seed  seeders/20200709170647-default-airDrop.js  
+
+sequelize-cli migration:generate --name 'Add coloum  airDropDollarAmount in usersTable'
+
+
+Export 
+sudo mysqldump -u root -p  mlm_testing > mlmdevserver1.sql
+
+import 
+mysql -u root -p mlm_development < mlmdevserver1.sql 
+ 
+pm2 start npm -- start 
+
+
+ sudo scp -i /home/mayank/Downloads/Fuelupeducation.pem     ubuntu@ec2-3-7-68-203.ap-south-1.compute.amazonaws.com:/home/ubuntu/development_mlm/mlm/config/mlmdevserver1.sql . 
+
+
+sequelize-cli migration:generate --name 'Add coloum  isWithdrawal in monthlyrewardTable'

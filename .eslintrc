@@ -1,0 +1,14 @@
+{
+  "rules": {
+    "semi": "warn",
+    "quotes": "off",
+    "no-unused-vars": "off"
+  },
+  "parserOptions": {
+    "sourceType": "module",
+    "ecmaVersion": 2020
+  },
+  "env": {
+    "es6": true
+  }
+}
