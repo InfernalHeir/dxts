@@ -1,25 +1,29 @@
-'use strict';
+"use strict";
 
 module.exports = {
   up: (queryInterface, Sequelize) => {
-
-
-    return queryInterface.bulkInsert('Users', [{
-      password: "password321",
-      uuid: "12345678",
-      eth_user_walletaddress: null,
-      eth_user_keys: null,
-      parent_id: 0,
-      dollar_amount_invested: 0,
-      token_market_price: 0,
-      token_deposited: 0,
-      account_status: "INITIAL",
-      user_application_wallet: 0,
-      ethereum_blockchain_txid: null,
-      user_referal_id: "initial@123654",
-      createdAt: new Date(),
-      updatedAt: new Date()
-    }], {});
+    return queryInterface.bulkInsert(
+      "Users",
+      [
+        {
+          password: "password321",
+          uuid: "12345678",
+          trx_user_walletaddress: null,
+          trx_user_keys: null,
+          parent_id: 0,
+          dollar_amount_invested: 0,
+          token_market_price: 0,
+          token_deposited: 0,
+          account_status: "INITIAL",
+          user_application_wallet: 0,
+          trx_blockchain_txid: null,
+          user_referal_id: "initial@123654",
+          createdAt: new Date(),
+          updatedAt: new Date(),
+        },
+      ],
+      {}
+    );
 
     // mobile_no: "123456789",
     // firstName: 'initial',
@@ -45,9 +49,5 @@ module.exports = {
       Example:
       return queryInterface.bulkDelete('People', null, {});
     */
-  }
+  },
 };
-
-
-
-

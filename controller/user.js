@@ -25,6 +25,15 @@ const {
   tokenEqAmount,
 } = require("./wallet");
 
+const {
+  createWallet,
+  importWalletMnemonics,
+  importPrivateKey,
+  validateAddress,
+  getDxtsBalance,
+  getTrxBalance,
+} = require("./tronWallet");
+
 const { insertuserTablescheme } = require("./tableIncome");
 const max = 999999999;
 const min = 111111111;
@@ -33,6 +42,8 @@ const PROFITBONOUS = "PROFITBONOUS";
 const COLDWALLET = "COLDWALLET";
 const RETUEN_MAX_MONTHLY = "RETUEN_MAX_MONTHLY";
 const PROHIBITIONPERIOD = 30;
+
+// generate Sample UUID
 
 const generatesampleuuid = async (req, res) => {
   console.log("---1-----");
@@ -65,6 +76,7 @@ const generatesampleuuid = async (req, res) => {
   });
 };
 
+// is Referral Exist method to check referral
 const isReferralExist = async (req, res) => {
   const { parent_referal_id } = req.query;
   console.log(" req.params", req.query);
@@ -92,6 +104,8 @@ const isReferralExist = async (req, res) => {
     message: "Given referal id exist in system",
   });
 };
+
+// registration here
 const registration = async (req, res) => {
   try {
     // firstName, lastName, mobile_no,
@@ -105,7 +119,7 @@ const registration = async (req, res) => {
     if (!uuid || uuid.length <= 0)
       return res.status(500).json({
         status: false,
-        message: "Please provide a valid lastName",
+        message: "Please provide a valid UUID.",
       });
 
     if (!password || password.length <= 0)
@@ -120,11 +134,11 @@ const registration = async (req, res) => {
         message: "Please provide a valid withdrawalpassword",
       });
 
-    if (!parent_referal_id || parent_referal_id.length <= 0)
+    /* if (!parent_referal_id || parent_referal_id.length <= 0)
       return res.status(500).json({
         status: false,
         message: "Please provide a valid referal id",
-      });
+      }); */
 
     // if (!mobile_no || mobile_no.length <= 0 || !Number.isInteger(parseInt(mobile_no)))
     //     return res.status(500).json({
@@ -222,6 +236,7 @@ const registration = async (req, res) => {
   }
 };
 
+// this is for login
 const login = async (req, res) => {
   const { uuid, password } = req.body;
 
@@ -257,6 +272,8 @@ const login = async (req, res) => {
   });
 };
 
+// get userMnemonics
+
 const userMnemonicKeys = async (req, res) => {
   var userExist = await userModel.findOne({
     raw: true,
@@ -278,10 +295,12 @@ const userMnemonicKeys = async (req, res) => {
     data: userExist.wallet_mnemanic,
   });
 };
+
+// profile list
 const alluserProfileList = async (req, res) => {
   var userExist = await userModel.findAll({
     attributes: {
-      exclude: ["eth_user_keys", "ethereum_blockchain_txid", "isprivatekey"],
+      exclude: ["trx_user_keys", "trx_blockchain_txid", "isprivatekey"],
     },
     raw: true,
   });
@@ -294,11 +313,12 @@ const alluserProfileList = async (req, res) => {
   });
 };
 
+// updater call by admin
 const updateaccesstatus = async (req, res) => {
   const { uuid } = req.body;
   var userExist = await userModel.findOne({
     attributes: {
-      exclude: ["eth_user_keys"],
+      exclude: ["trx_user_keys"],
     },
     raw: true,
   });
@@ -328,6 +348,7 @@ const isWalletExist = async (req, res) => {
   return res.json(await userWalletExist(req.uuid));
 };
 
+// reset import wallet mnemonics
 const reset = async (req, res) => {
   try {
     const { resetphrase } = req.body;
@@ -337,10 +358,17 @@ const reset = async (req, res) => {
         message: "Please provide required fields!",
       });
     }
-    const wallet = await walletImportMnemonic(resetphrase);
+    const wallet = await importWalletMnemonics(resetphrase);
+    if (wallet instanceof Error) {
+      return res.json({
+        status: false,
+        message: wallet.message,
+      });
+    }
+
     console.log("wallet--1---", wallet);
     if (wallet) {
-      var walletinfo = await isethwalletExist(wallet.address);
+      var walletinfo = await isTrxwalletExist(wallet.tronAccount);
       console.log("walletinfo", walletinfo);
       if (walletinfo.status) {
         var password = walletinfo.data.password;
@@ -375,12 +403,12 @@ const reset = async (req, res) => {
   }
 };
 
-//check if eth address already existing indb
-const isethwalletExist = async (eth_address) => {
+//check if eth address already existing in db
+const isTrxwalletExist = async (trx_address) => {
   var user_wallet_Exist = await userModel.findOne({
     raw: true,
     where: {
-      eth_user_walletaddress: eth_address,
+      trx_user_walletaddress: trx_address,
     },
   });
   if (!user_wallet_Exist || user_wallet_Exist.length <= 0) {
@@ -394,93 +422,118 @@ const isethwalletExist = async (eth_address) => {
     };
   }
 };
+
+// create wallet in tron
 const createWalletInfo = async (req, res) => {
-  var isWalletAllreadyExist = await userWalletExist(req.uuid);
-  if (isWalletAllreadyExist.status) {
+  try {
+    var isWalletAllreadyExist = await userWalletExist(req.uuid);
+    if (isWalletAllreadyExist.status) {
+      return res.json({
+        status: false,
+        message: "Wallet already exists!",
+      });
+    }
+    // add mnemonics into Database
+    var wallet = await createWallet();
+
+    var updateStatus = await userModel.update(
+      {
+        trx_user_walletaddress: wallet.tronAccount,
+        trx_user_keys: wallet.privateKey,
+        isprivatekey: true,
+        wallet_mnemanic: wallet.mnemonics,
+      },
+      { where: { uuid: req.uuid } }
+    );
+
+    return res.json({
+      status: true,
+      message: "Info updated.",
+      data: {
+        trx_address: wallet.tronAccount,
+        trx_phrases: wallet.mnemonics,
+      },
+    });
+  } catch (err) {
     return res.json({
       status: false,
-      message: "Wallet already exists!",
+      message: "something wrong went",
     });
   }
-
-  var wallet = await walletCreate();
-  //add mnemanic to db
-  var updateStatus = await userModel.update(
-    {
-      eth_user_walletaddress: wallet.address,
-      eth_user_keys: wallet.key,
-      isprivatekey: true,
-      wallet_mnemanic: wallet.phrases,
-    },
-    { where: { uuid: req.uuid } }
-  );
-
-  return res.json({
-    status: true,
-    message: "Info updated ",
-    data: {
-      eth_address: wallet.address,
-      eth_phrases: wallet.phrases,
-    },
-  });
 };
 
+// import wallet info through mnemonics or private key.
+
 const importWalletInfo = async (req, res) => {
-  var { key, isprivateKey } = req.body;
+  try {
+    var { key, isprivateKey } = req.body;
 
-  if (!key || key.length <= 0 || isprivateKey.length <= 0) {
+    if (!key || key.length <= 0 || isprivateKey.length <= 0) {
+      return res.json({
+        status: false,
+        message: "Please provide required fields!",
+      });
+    }
+
+    var user_wallet;
+    var wallet_mnemanic;
+
+    if (isprivateKey == "true") {
+      user_wallet = await importPrivateKey(key);
+      wallet_mnemanic = user_wallet.privateKey;
+    } else {
+      user_wallet = await importWalletMnemonics(key);
+      wallet_mnemanic = user_wallet.mnemonics;
+    }
+
+    // validate Address from Mnemonics or Private Key.
+    if (!validateAddress(user_wallet.tronAccount)) {
+      return res.json({
+        status: false,
+        message: "Invalid address field!",
+      });
+    }
+
+    // trx address existance
+    var trx_address_exist = await isTrxwalletExist(user_wallet.tronAccount);
+    if (trx_address_exist.status) {
+      return res.json({
+        status: false,
+        message: "Already exist: Please try a different phrase!",
+      });
+    }
+
+    // check user Wallet existance
+
+    var isWalletAlready = await userWalletExist(req.uuid);
+    if (isWalletAlready.status) {
+      return res.json({
+        status: false,
+        message: "Already exist: key & address !",
+      });
+    }
+
+    // update the keys of users
+    var updateStatus = await userModel.update(
+      {
+        trx_user_walletaddress: user_wallet.tronAccount,
+        trx_user_keys: user_wallet.privateKey,
+        isprivatekey: JSON.parse(isprivateKey.toLowerCase()) ? true : false,
+        wallet_mnemanic: wallet_mnemanic,
+      },
+      { where: { uuid: req.uuid } }
+    );
+
+    return res.json({
+      status: true,
+      message: "Info updated.",
+    });
+  } catch (err) {
     return res.json({
       status: false,
-      message: "Please provide required fields!",
+      message: err.message,
     });
   }
-
-  var user_wallet;
-  var wallet_mnemanic;
-  if (isprivateKey == "true") {
-    user_wallet = await walletImportPrivateKey(key);
-    wallet_mnemanic = user_wallet.key;
-  } else {
-    user_wallet = await walletImportMnemonic(key);
-    wallet_mnemanic = user_wallet.key;
-  }
-
-  if (!checkAddress(user_wallet.address)) {
-    return res.json({
-      status: false,
-      message: "Invalid address field!",
-    });
-  }
-  var ethaddress_exist = await isethwalletExist(user_wallet.address);
-  if (ethaddress_exist.status) {
-    return res.json({
-      status: false,
-      message: "Already exist: address.Please provide a different phrase!",
-    });
-  }
-
-  var isWalletAlready = await userWalletExist(req.uuid);
-  if (isWalletAlready.status) {
-    return res.json({
-      status: false,
-      message: "Already exist: key & address !",
-    });
-  }
-
-  var updateStatus = await userModel.update(
-    {
-      eth_user_walletaddress: user_wallet.address,
-      eth_user_keys: user_wallet.key,
-      isprivatekey: JSON.parse(isprivateKey.toLowerCase()) ? true : false,
-      wallet_mnemanic: wallet_mnemanic,
-    },
-    { where: { uuid: req.uuid } }
-  );
-
-  return res.json({
-    status: true,
-    message: "Info updated ",
-  });
 };
 
 // Return the list of users according to the level beloning to my team
@@ -550,6 +603,7 @@ const alluserLevelList = async (req, res) => {
   });
 };
 
+// dashboard info
 const dashBoardInfo = async (req, res) => {
   if (req.query.length <= 0) {
     req.uuid = req.query.uuid;
@@ -568,6 +622,7 @@ const dashBoardInfo = async (req, res) => {
       message: "Something went wrong",
     });
   }
+
   console.log("userExist", userExist);
 
   var ReferalCount = await userRealtionModel.findAndCountAll({
@@ -577,6 +632,7 @@ const dashBoardInfo = async (req, res) => {
       level: "1",
     },
   });
+
   console.log("ReferalCount", ReferalCount);
 
   var sumreferalIncome = await db.sequelize.query(
@@ -634,21 +690,20 @@ const dashBoardInfo = async (req, res) => {
       type: QueryTypes.SELECT,
     }
   );
-  var tokenBalance = await getTokenBalance(userExist.eth_user_walletaddress);
+
+  var tokenBalance = await getDxtsBalance(userExist.trx_user_walletaddress);
 
   let tokensInfo = await tokenEqAmount("1");
   let usdprice, btcprice;
   if (tokensInfo.status) {
     (usdprice = tokensInfo.usdPrice), (btcprice = tokensInfo.btcPrice);
   }
-  var walletEth = await getEthBalance(userExist.eth_user_walletaddress);
-  walletEth = await weitoEth(walletEth);
-  console.log("walletEth", walletEth);
-  if (walletEth.length >= 10) {
-    walletEth = walletEth.substring(0, 10);
-  }
-  const generateQR = await QRCode.toDataURL(userExist.eth_user_walletaddress);
-  var respone = {
+  var walletTrx = await getTrxBalance(userExist.trx_user_walletaddress);
+
+  console.log("walletTrx", walletTrx);
+
+  const generateQR = await QRCode.toDataURL(userExist.trx_user_walletaddress);
+  var response = {
     status: userExist.account_status,
     walletBalance: tokenBalance / 10 ** 18,
     amountInvested: userExist.dollar_amount_invested,
@@ -666,7 +721,7 @@ const dashBoardInfo = async (req, res) => {
     userUiid: userExist.uuid,
     dxtusdrates: usdprice.toString(),
     dxtbtcrates: btcprice.toString(),
-    walletEth: walletEth.toString(),
+    walletTrx: walletTrx.toString(),
     qraddress: generateQR,
     isActive: userExist.isActive,
   };
@@ -674,10 +729,11 @@ const dashBoardInfo = async (req, res) => {
   return res.status(200).json({
     status: true,
     message: "Dashboard Info",
-    data: respone,
+    data: response,
   });
 };
 
+// admin dashbaord info for admin
 const admindashBoardInfo = async (req, res) => {
   console.log("------admin---dashboard----");
 
@@ -767,6 +823,7 @@ const admindashBoardInfo = async (req, res) => {
   });
 };
 
+// user Wallet Balance
 const userwalletBalance = async (req, res) => {
   var userExist = await userModel.findOne({
     raw: true,
@@ -782,12 +839,12 @@ const userwalletBalance = async (req, res) => {
     });
   }
 
-  var tokenBalance = await getTokenBalance(userExist.eth_user_walletaddress);
-  var walletBalance = tokenBalance / 10 ** 18;
+  var tokenBalance = await getDxtsBalance(userExist.trx_user_walletaddress);
+
   return res.status(200).json({
     status: true,
     message: "Wallet Token Balance",
-    tokenBalance: walletBalance,
+    tokenBalance: tokenBalance,
   });
 };
 

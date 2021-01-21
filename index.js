@@ -248,7 +248,7 @@ app.get("/allnews", checkToken, getallnewslist);
 
 // tron api checking
 
-app.get("/createTronAccount", async (req, res) => {
+/* app.get("/createTronAccount", async (req, res) => {
   try {
     const keyStore = await createWallet();
     console.log("keyStore", keyStore);
@@ -264,6 +264,24 @@ app.get("/getTrxBal/:address", async (req, res) => {
   const getBalance = await getTrxBalance(tronAccount);
   res.send(`${getBalance} TRX`);
 });
+
+app.get("/importPriv/:privateKey", async (req, res) => {
+  const privateKey = req.params.privateKey;
+  console.log(privateKey);
+  const keyStore = await importPrivateKey(privateKey);
+  res.json(keyStore);
+}); */
+
+/* app.get("/importMnemonics", async (req, res) => {
+  const mnemonics = req.query.mnemonices;
+  console.log(mnemonics);
+  const keyStore = await importWalletMnemonics(mnemonics, (err, result) => {
+    if (err) {
+      return res.send(err.message);
+    }
+    res.json(result);
+  });
+}); */
 
 cron.schedule(" 1 23 * * * ", function () {
   distributeTableReward();

@@ -11,6 +11,7 @@ var utils = ethers.utils;
 var providers = ethers.providers;
 var Web3 = require("web3");
 var fs = require("fs");
+const { getDxtsBalance } = require("./tronWallet");
 const options = { transactionConfirmationBlocks: 1 };
 var web3 = new Web3(
   new Web3.providers.HttpProvider(
@@ -624,7 +625,7 @@ var tokenEqAmount = async (usdAmount) => {
 
   var tokenPrice = response.data.market_data.current_price.usd;
   var btctokenPrice = response.data.market_data.current_price.btc;
-  var ethtokenPrice = response.data.market_data.current_price.eth;
+  //var trxtokenPrice = response.data.market_data.current_price.trx;
   var tokenAmount = await usdtotokenconversion(usdAmount, tokenPrice);
 
   return {
@@ -633,7 +634,7 @@ var tokenEqAmount = async (usdAmount) => {
     tokenAmount: tokenAmount,
     usdPrice: tokenPrice,
     btcPrice: btctokenPrice,
-    ethPrice: ethtokenPrice,
+    trxPrice: 0,
   };
 };
 
@@ -674,7 +675,7 @@ var walletImportPrivateKey = async (privateKey) => {
 
 var userWalletExist = async (uuid) => {
   var user_wallet_Exist = await userModel.findOne({
-    attributes: ["eth_user_walletaddress"],
+    attributes: ["trx_user_walletaddress"],
     where: {
       uuid: uuid,
     },
@@ -687,12 +688,12 @@ var userWalletExist = async (uuid) => {
       status: false,
     };
   }
-  var tokenBalance = await getTokenBalance(
-    user_wallet_Exist.dataValues.eth_user_walletaddress
+  var tokenBalance = await getDxtsBalance(
+    user_wallet_Exist.dataValues.trx_user_walletaddress
   );
   return {
     status: true,
-    walletAddress: user_wallet_Exist.dataValues.eth_user_walletaddress,
+    walletAddress: user_wallet_Exist.dataValues.trx_user_walletaddress,
     //@TODO hard coded decimal value of tokens
     tokenBalance: tokenBalance / 10 ** 18,
   };

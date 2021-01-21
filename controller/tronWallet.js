@@ -27,6 +27,7 @@ const tronWeb = new TronWeb(
 // contract interaction in tronweb
 
 const triggerSmartContract = async () => {
+  // intreact with ABI files
   const abiRaw = fs.readFileSync("../constants/ABI.json");
   const abi = json.parse(abiRaw);
 
@@ -83,28 +84,105 @@ const importPrivateKey = async (privateKey) => {
 
 // import mnemonics into this wallet
 const importWalletMnemonics = async (mnemonic) => {
-  if (bip39.validateMnemonic(mnemonic)) {
+  if (!bip39.validateMnemonic(mnemonic)) {
     return new Error("bip39: wrong mnemonics code?");
   }
-  const privateKey = await getPrivateKeyFromMnemonics(mnemonic);
-  const tronAccount = await TronWeb.address.fromPrivateKey(privateKey);
-  return {
-    privateKey,
-    tronAccount,
-  };
+  try {
+    const privateKey = await getPrivateKeyFromMnemonics(mnemonic);
+    const tronAccount = await TronWeb.address.fromPrivateKey(privateKey);
+    return {
+      mnemonic,
+      privateKey,
+      tronAccount,
+    };
+  } catch (err) {
+    return err;
+  }
 };
 
+// get TRX balance
 const getTrxBalance = async (address) => {
   const toSun = await tronWeb.trx.getBalance(address);
   const trxBalance = tronWeb.fromSun(toSun);
   return trxBalance;
 };
 
+// get decimals of dxts token
+const dxtsDecimals = async () => {
+  const instance = await triggerSmartContract();
+  const decimals = await instance.methods.decimals().call();
+  return decimals;
+};
+
+// fromDxtsSun converter
+const fromDxtsSun = (unit, decimals) => {
+  return uint / 10 ** decimals;
+};
+
+//toDxtsSun converter
+const toDxtsSun = (uint, decimals) => {
+  return uint * 10 ** decimals;
+};
+// get DXTS token Balance
+
 const getDxtsBalance = async (dxtsHodlAddress) => {
-  const instance = triggerSmartContract();
+  const instance = await triggerSmartContract();
   const toDxtsSunBal = await instance.methods.balanceOf(dxtsHodlAddress).call();
-  const dxtsBal = tronWeb.fromSun(toDxtsSunBal);
+  const decimals = await dxtsDecimals();
+  const dxtsBal = fromDxtsSun(toDxtsSunBal, decimals);
   return parseFloat(dxtsBal);
+};
+
+// token Transfer
+
+const tokenTransfer = async (
+  receiverAddress,
+  tokenAmount,
+  senderAddress,
+  PRIVATE_KEY_SENDER
+) => {
+  // check both address
+  const sender = validateAddress(senderAddress);
+  const receiver = validateAddress(receiverAddress);
+  if (!(sender && receiver)) {
+    return {
+      status: false,
+      message: "Invalid Address.",
+    };
+  }
+  // verify token Amount and tokenBalance Avail
+
+  const senderAvailTokenBalance = await getDxtsBalance(senderAddress);
+  if (tokenAmount <= 0 || senderAvailTokenBalance < tokenAmount) {
+    return {
+      status: false,
+      message: "Incorrect token amount or Insufficeint Balance",
+    };
+  }
+
+  // now you can send the tokens from with to.
+  const instance = await triggerSmartContract();
+  // send tokens but first set the privateKey of Sender to sign transaction.
+  tronWeb.setPrivateKey(PRIVATE_KEY_SENDER);
+
+  // now you can invoke contract methods
+  try {
+    const txObj = await instance.methods
+      .transfer(receiverAddress, tokenAmount)
+      .send({
+        from: senderAddress,
+      });
+
+    return {
+      status: "success",
+      message: txObj,
+    };
+  } catch (err) {
+    return {
+      status: "failed",
+      message: err.message,
+    };
+  }
 };
 
 module.exports = {
@@ -114,4 +192,7 @@ module.exports = {
   importWalletMnemonics,
   getTrxBalance,
   getDxtsBalance,
+  tokenTransfer,
+  fromDxtsSun,
+  toDxtsSun,
 };
