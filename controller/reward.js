@@ -18,6 +18,7 @@ const {
 } = require("./wallet");
 
 var models = require("../models");
+const { getTrxBalance, getDxtsBalance } = require("./tronWallet");
 const IncomeschemeModel = models.Income_scheme;
 const userModel = models.User;
 const rewardModel = models.Reward;
@@ -311,9 +312,9 @@ const initialInvestement = async (req, res) => {
   console.log("-----------------2-----------------------");
   var userExist = await userModel.findOne({
     attributes: [
-      "eth_user_walletaddress",
+      "trx_user_walletaddress",
       "id",
-      "eth_user_keys",
+      "trx_user_keys",
       "isprivatekey",
       "account_status",
     ],
@@ -359,19 +360,19 @@ const initialInvestement = async (req, res) => {
   }
 
   //token balance
-  let availableToken = await getTokenBalance(userExist.eth_user_walletaddress);
+  let availableToken = await getDxtsBalance(userExist.trx_user_walletaddress);
 
   console.log("--1--availableToken------", availableToken);
 
   //Eth balance
-  let availableEthers = await getEthBalance(userExist.eth_user_walletaddress);
+  let availableEthers = await getTrxBalance(userExist.trx_user_walletaddress);
 
   console.log("---2-availableEthers------", availableEthers);
 
   if (availableEthers <= 0) {
     return res.send({
       status: false,
-      message: "Insufficient funds available  : Ethers!",
+      message: "Insufficient funds available  : TRX!",
     });
   }
 
@@ -406,12 +407,12 @@ const initialInvestement = async (req, res) => {
   console.log("-----5------tokenrequired-------------", tokenrequired);
   const tokenAmount = tokenrequired.toString();
   // const tokenAmount = 1792114
-  const senderAddress = userExist.eth_user_walletaddress;
-  const PRIVATE_KEY_SENDER = userExist.eth_user_keys;
+  const senderAddress = userExist.trx_user_walletaddress;
+  const PRIVATE_KEY_SENDER = userExist.trx_user_keys;
   const isprivatekey = userExist.isprivatekey;
 
   console.log(
-    "---------------7----------------trabsfer token------",
+    "---------------7----------------transfer token------",
     tokenAmount,
     PRIVATE_KEY_SENDER,
     senderAddress,
@@ -466,7 +467,7 @@ const initialInvestement = async (req, res) => {
       {
         account_status: ACTIVE,
       },
-      { where: { ethereum_blockchain_txid: txinfo.data } }
+      { where: { trx_blockchain_txid: txinfo.data } }
     );
 
     if (isfirstInvestment.count > 0) {
@@ -486,7 +487,7 @@ const initialInvestement = async (req, res) => {
 
   return res.json({
     status: true,
-    message: "Investment initiated ",
+    message: "Investment initiated.",
     data: {
       transactionId: txinfo.data,
     },
@@ -1080,11 +1081,11 @@ const minmaxdollarInvestment = async (req, res) => {
 };
 
 //user can transer dxts to other wallet's
-const ethtoTokenconversion = async (req, res) => {
+const trxtoTokenconversion = async (req, res) => {
   let user_uuid = req.uuid;
-  let { tokentransferAmount, ethAmount } = req.body;
+  let { tokentransferAmount, trxAmount } = req.body;
   console.log(tokentransferAmount);
-  console.log(ethAmount);
+  console.log(trxAmount);
   if (!tokentransferAmount) {
     return res.send({
       status: false,
@@ -1092,7 +1093,7 @@ const ethtoTokenconversion = async (req, res) => {
     });
   }
   //the amount of ethers to be deducted from user's wallet for conversion to token.
-  if (!ethAmount) {
+  if (!trxAmount) {
     return res.send({
       status: false,
       message: "Incorrect params details!",
@@ -1123,7 +1124,7 @@ const ethtoTokenconversion = async (req, res) => {
 
   var userExist = await userModel.findOne({
     attributes: [
-      "eth_user_walletaddress",
+      "trx_user_walletaddress",
       "id",
       "eth_user_keys",
       "isprivatekey",
@@ -1196,26 +1197,29 @@ const ethtoTokenconversion = async (req, res) => {
     userExist.id
   );
 };
-const ethConversionRateInfo = async (req, res) => {
+
+const trxConversionRateInfo = async (req, res) => {
   try {
-    let { eth_available_for_token } = req.query;
-    let user_availableEthers;
+    let { trx_available_for_token } = req.query;
+
+    let user_availableTrx;
 
     var userExist = await userModel.findOne({
-      attributes: ["eth_user_walletaddress", "id"],
+      attributes: ["trx_user_walletaddress", "id"],
       raw: true,
       where: {
         uuid: req.uuid,
       },
     });
 
-    user_availableEthers = await getEthBalance(
-      userExist.eth_user_walletaddress
-    );
-    if (!eth_available_for_token) {
-      eth_available_for_token = user_availableEthers - MINIMUM_ETH_FOR_TX_FEE;
+    user_availableTrx = await getTrxBalance(userExist.trx_user_walletaddress);
+
+    if (!trx_available_for_token) {
+      trx_available_for_token = user_availableTrx - MINIMUM_ETH_FOR_TX_FEE;
     }
-    let tokensInfo = await tokenEqAmount(eth_available_for_token);
+    let tokensInfo = await tokenEqAmount(trx_available_for_token);
+
+    // status for token info
     if (!tokensInfo.status) {
       return res.status(500).json({
         status: false,
@@ -1223,12 +1227,13 @@ const ethConversionRateInfo = async (req, res) => {
       });
     }
 
+    // excepted token received
     var expecttokenreceived = parseInt(
-      parseFloat(eth_available_for_token) / tokensInfo.ethPrice
+      parseFloat(trx_available_for_token) / tokensInfo.trxPrice
     );
 
-    tokensInfo["totalAvailableEth"] = user_availableEthers / 10 ** 18;
-    tokensInfo["eth_available_for_token"] = eth_available_for_token;
+    tokensInfo["totalAvailableTrx"] = user_availableTrx;
+    tokensInfo["trx_available_for_token"] = trx_available_for_token;
     tokensInfo["expectedTokenAmount"] = expecttokenreceived;
 
     return res.status(200).json({
@@ -1243,6 +1248,7 @@ const ethConversionRateInfo = async (req, res) => {
     });
   }
 };
+
 module.exports = {
   initialInvestement,
   LevelReferalIncome,
@@ -1258,6 +1264,6 @@ module.exports = {
   alluserrefrallist,
   getAirDrop,
   usertokenTranster,
-  ethtoTokenconversion,
+  trxtoTokenconversion,
   ethConversionRateInfo,
 };

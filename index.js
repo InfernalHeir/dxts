@@ -16,12 +16,12 @@ const http = require("http");
 var cors = require("cors");
 
 // asyncify for express router
-const asyncify = require("express-asyncify");
+//const asyncify = require("express-asyncify");
 const { config } = require("dotenv");
 config();
 // Set up the express app
 
-const app = asyncify(express());
+const app = express();
 //var dotenv = require('dotenv');
 
 const {
@@ -75,8 +75,8 @@ const {
   alluserrefrallist,
   getAirDrop,
   usertokenTranster,
-  ethtoTokenconversion,
   ethConversionRateInfo,
+  trxtoTokenconversion,
 } = require("./controller/reward");
 
 const {
@@ -179,11 +179,11 @@ app.get("/tokenpriceinfo", checkToken, tokenAmountEqUSDdeposit);
 
 app.get("/userwalletbalance", checkToken, userwalletBalance);
 
-app.get("/userwithdrawableAmoount", checkToken, userwithdrawableAmount);
+app.get("/userwithdrawableAmount", checkToken, userwithdrawableAmount);
 
 app.post("/tokentransfer", checkToken, usertokenTranster);
 
-app.post("/dxtsconversion", checkToken, ethtoTokenconversion);
+app.post("/dxtsconversion", checkToken, trxtoTokenconversion);
 
 app.get("/dxtsconversioninfo", checkToken, ethConversionRateInfo);
 

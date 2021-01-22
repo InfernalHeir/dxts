@@ -681,7 +681,7 @@ var userWalletExist = async (uuid) => {
     },
   });
   if (
-    !user_wallet_Exist.dataValues.eth_user_walletaddress ||
+    !user_wallet_Exist.dataValues.trx_user_walletaddress ||
     user_wallet_Exist.dataValues.length <= 0
   ) {
     return {

@@ -3,16 +3,14 @@ const bip39 = require("bip39");
 const HDKey = require("hdkey");
 const fs = require("fs");
 
-const fullNode = new TronWeb.providers.HttpProvider(
-  "https://api.shasta.trongrid.io/"
-);
+const fullNode = new TronWeb.providers.HttpProvider("https://api.trongrid.io/");
 
 const solidityNode = new TronWeb.providers.HttpProvider(
-  "https://api.shasta.trongrid.io/"
+  "https://api.trongrid.io/"
 );
 
 const eventNode = new TronWeb.providers.HttpProvider(
-  "https://api.shasta.trongrid.io/"
+  "https://api.trongrid.io/"
 );
 
 const privateKeyOfMaintainer = process.env.ADMIN_PRIVATE_KEY;
@@ -24,15 +22,14 @@ const tronWeb = new TronWeb(
   privateKeyOfMaintainer
 );
 
-// contract interaction in tronweb
-
 const triggerSmartContract = async () => {
   // intreact with ABI files
-  const abiRaw = fs.readFileSync("../constants/ABI.json");
-  const abi = json.parse(abiRaw);
+  // contract interaction in tronweb
 
+  const abiRaw = fs.readFileSync("/home/bhupendra/dxts/constants/ABI.json");
+  const abi = JSON.parse(abiRaw);
   const contractAddress = "THcQ2jUys38gp46M8p3HwwZ2dxivA8fvgK";
-  const contract = await tronWeb.contract(abi);
+  const contract = await tronWeb.contract(abi, contractAddress);
   return contract;
 };
 
@@ -116,12 +113,12 @@ const dxtsDecimals = async () => {
 
 // fromDxtsSun converter
 const fromDxtsSun = (unit, decimals) => {
-  return uint / 10 ** decimals;
+  return unit / 10 ** decimals;
 };
 
 //toDxtsSun converter
 const toDxtsSun = (uint, decimals) => {
-  return uint * 10 ** decimals;
+  return unit * 10 ** decimals;
 };
 // get DXTS token Balance
 
