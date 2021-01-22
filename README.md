@@ -51,7 +51,6 @@ response -
 ```
 POST /login
 H Content-Type: application/json *
-H x-access-token: string *
 
 Request Body
 uuid: string *
@@ -61,7 +60,6 @@ return Object
 
 login with pharse
 H Content-Type: application/json *
-H x-access-token: string *
 
 Request Body
 resetphrase: string
