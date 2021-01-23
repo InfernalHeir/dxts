@@ -134,11 +134,11 @@ const registration = async (req, res) => {
         message: "Please provide a valid withdrawalpassword",
       });
 
-    /* if (!parent_referal_id || parent_referal_id.length <= 0)
+    if (!parent_referal_id || parent_referal_id.length <= 0)
       return res.status(500).json({
         status: false,
         message: "Please provide a valid referal id",
-      }); */
+      });
 
     // if (!mobile_no || mobile_no.length <= 0 || !Number.isInteger(parseInt(mobile_no)))
     //     return res.status(500).json({

@@ -7,19 +7,19 @@ LABEL maintainer="DXTS MLM"
 WORKDIR /usr/src/app
 
 ADD ./package.json ./
-ADD ./package-lock.json ./
 
-RUN node -v \
-    npm -v \
-    npm install \
-    chmod a+x ./ \
-    npm install pm2 -g
+RUN node -v
+RUN npm -v
+RUN npm install
+RUN chmod a+x ./
 
+RUN npm install -g pm2
 COPY . ./
 
 EXPOSE 3000
 
-CMD [ "npm","start" ]
+ENTRYPOINT [ "npm" ]
+CMD ["start" ]
 
 
 
