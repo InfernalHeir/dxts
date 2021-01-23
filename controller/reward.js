@@ -18,7 +18,7 @@ const {
 } = require("./wallet");
 
 var models = require("../models");
-const { getTrxBalance, getDxtsBalance } = require("./tronWallet");
+const { getTrxBalance, getDxtsBalance, toDxtsSun, tokenTransfer } = require("./tronWallet");
 const IncomeschemeModel = models.Income_scheme;
 const userModel = models.User;
 const rewardModel = models.Reward;
@@ -182,6 +182,7 @@ const ReferalJoiningtx = async (user_id) => {
     // The transaction has already been rolled back automatically by Sequelize!
   }
 };
+
 //user can transer dxts to other wallet's
 const usertokenTranster = async (req, res) => {
   let user_uuid = req.uuid;
@@ -276,12 +277,17 @@ const usertokenTranster = async (req, res) => {
     });
   }
 };
-//@TODO gas price Managment
-//@Fixed token decimal issue
+
+// this is initial investment of DXTS token. 
 const initialInvestement = async (req, res) => {
+  
+  // user id 
   let user_uuid = req.uuid;
+  
+  // amount invested in Doller;
   let { amount_invested } = req.body;
 
+  // Min-Max Investment to verify
   var minmaxInvestment = await investmentAmountModel.findOne({
     attributes: ["min_amount_dollar", "max_amount_dollar"],
     raw: true,
@@ -290,26 +296,29 @@ const initialInvestement = async (req, res) => {
       ["createdAt", "DESC"],
     ],
   });
+
+  // dont worry this will not exposed on production
   console.log("minmaxInvestment", minmaxInvestment);
-  //Checkinvested _usd
+
+  // verify invested usd
   if (
     !amount_invested ||
     !(
-      minmaxInvestment.min_amount_dollar <= amount_invested &&
-      amount_invested <= minmaxInvestment.max_amount_dollar
+      minmaxInvestment.min_amount_dollar <= amount_invested
     )
   ) {
     return res.json({
       status: false,
-      message:
-        "Please provide the amount between !" +
-        minmaxInvestment.min_amount_dollar +
-        " & " +
-        minmaxInvestment.max_amount_dollar,
+      message: `Minimum investment Amount is ${minmaxInvestment.min_amount_dollar}`
     });
   }
 
+  // second Step.
+
   console.log("-----------------2-----------------------");
+  
+  // fetch user basic details.
+
   var userExist = await userModel.findOne({
     attributes: [
       "trx_user_walletaddress",
@@ -324,6 +333,8 @@ const initialInvestement = async (req, res) => {
     },
   });
 
+  
+
   // check if user has any investment with Initial
   // console.log("----userExist------", userExist)
   // if (userExist.account_status != INITIAL) {
@@ -334,6 +345,7 @@ const initialInvestement = async (req, res) => {
   // }
 
   //check if it is first time investment.
+
   var isfirstInvestment = await userInvestmentmoddel.findAndCountAll({
     raw: true,
     where: {
@@ -359,22 +371,24 @@ const initialInvestement = async (req, res) => {
     }
   }
 
-  //token balance
+  // Step 3 fetch token balance
   let availableToken = await getDxtsBalance(userExist.trx_user_walletaddress);
 
   console.log("--1--availableToken------", availableToken);
 
-  //Eth balance
-  let availableEthers = await getTrxBalance(userExist.trx_user_walletaddress);
+  // fetch trx balance
+  let availableTrx = await getTrxBalance(userExist.trx_user_walletaddress);
 
-  console.log("---2-availableEthers------", availableEthers);
+  console.log("---2-availableEthers------", availableTrx);
 
-  if (availableEthers <= 0) {
+  if (availableTrx <= 0) {
     return res.send({
       status: false,
       message: "Insufficient funds available  : TRX!",
     });
   }
+
+  // Step 4 now check the token amount in usd.
 
   let tokensInfo = await tokenEqAmount(amount_invested);
 
@@ -385,47 +399,54 @@ const initialInvestement = async (req, res) => {
     });
   }
 
-  let tokenrequired = tokensInfo.tokenAmount;
-  console.log("--3-line 244---tokenrequired-----", tokenrequired);
-  tokenrequired = await tokenBignumberConversion(tokenrequired);
+  // this will give you token QTY for specfic USD;
+  let tokenQty = tokensInfo.tokenAmount;
+  
+  
+  console.log("--3-line 244---tokenrequired-----", tokenQty);
 
+  // connvert to this tron into DXTS Conversion.
+  const decimals = await dxtsDecimals();
+
+  // getting token in DXTS SUN 8 Decimals.
+  tokenQty = await toDxtsSun(tokenQty,decimals);
+
+  // print sun 8 Decimals value in Console.
   console.log(
-    "---------------4----------------tokenrequired------",
-    tokenrequired
+    "---------------4----------------token qty in 8 Decimals------",
+    tokenQty
   );
 
-  if (tokenrequired > availableToken || availableEthers < 0) {
+  // check Condition for availablity of tokens.
+  if (tokenQty > availableToken || availableTrx < 0) {
     return res.json({
       status: false,
-      message: "Insufficient funds available ",
+      message: "Insufficient funds available.",
     });
   }
 
   //Fixed updated the actual admin
-  let AADMIN_WALLET_ADDRESS = "0xF16f001f1a1D8921167Cc5FB68A12649b66A5A33";
-  const receiverAddress = AADMIN_WALLET_ADDRESS;
-  console.log("-----5------tokenrequired-------------", tokenrequired);
-  const tokenAmount = tokenrequired.toString();
-  // const tokenAmount = 1792114
+  let ADMIN_TRX_WALLET_ADDRESS = process.env.ADMIN_PUBLIC_ADDRESS;
+
+  // store receiver address; this is for receiving tokens from users.
+  const receiverAddress = ADMIN_TRX_WALLET_ADDRESS;
+
+  // sender Address 
   const senderAddress = userExist.trx_user_walletaddress;
+  // sender Private Key to Sign
   const PRIVATE_KEY_SENDER = userExist.trx_user_keys;
-  const isprivatekey = userExist.isprivatekey;
+  // is Private Key to Detect is it Mnemonics or Private Key.
+  const isPrivateKey = userExist.isprivatekey;
 
-  console.log(
-    "---------------7----------------transfer token------",
-    tokenAmount,
-    PRIVATE_KEY_SENDER,
-    senderAddress,
-    receiverAddress
-  );
-
-  var txinfo = await tranferTokens(
+  // trigger transfer transaction with that private Key.
+  var txObj = await tranferTokens(
     receiverAddress,
     tokenAmount,
     senderAddress,
     PRIVATE_KEY_SENDER,
-    isprivatekey
+    isPrivateKey
   );
+
   console.log("---------------8----------------------", txinfo);
   if (txinfo && txinfo.status && txinfo.data) {
     if (isfirstInvestment.count == 0) {
@@ -1100,7 +1121,7 @@ const trxtoTokenconversion = async (req, res) => {
     });
   }
 
-  let tokensInfo = await tokenEqAmount(ethAmount);
+  let tokensInfo = await tokenEqAmount(trxAmount);
   console.log("tokensInfo", tokensInfo);
 
   console.log("tokentransferAmount", tokentransferAmount);
@@ -1265,5 +1286,4 @@ module.exports = {
   getAirDrop,
   usertokenTranster,
   trxtoTokenconversion,
-  ethConversionRateInfo,
 };

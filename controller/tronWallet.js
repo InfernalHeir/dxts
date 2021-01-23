@@ -2,15 +2,21 @@ const TronWeb = require("tronweb");
 const bip39 = require("bip39");
 const HDKey = require("hdkey");
 const fs = require("fs");
+const axios = require("axios");
+const CoinGecko = require("coingecko-api");
 
-const fullNode = new TronWeb.providers.HttpProvider("https://api.trongrid.io/");
+const CoinGeckoClient = new CoinGecko();
+
+const fullNode = new TronWeb.providers.HttpProvider(
+  "https://api.shasta.trongrid.io/"
+);
 
 const solidityNode = new TronWeb.providers.HttpProvider(
-  "https://api.trongrid.io/"
+  "https://api.shasta.trongrid.io/"
 );
 
 const eventNode = new TronWeb.providers.HttpProvider(
-  "https://api.trongrid.io/"
+  "https://api.shasta.trongrid.io/"
 );
 
 const privateKeyOfMaintainer = process.env.ADMIN_PRIVATE_KEY;
@@ -100,8 +106,7 @@ const importWalletMnemonics = async (mnemonic) => {
 // get TRX balance
 const getTrxBalance = async (address) => {
   const toSun = await tronWeb.trx.getBalance(address);
-  const trxBalance = tronWeb.fromSun(toSun);
-  return trxBalance;
+  return toSun;
 };
 
 // get decimals of dxts token
@@ -120,14 +125,13 @@ const fromDxtsSun = (unit, decimals) => {
 const toDxtsSun = (uint, decimals) => {
   return unit * 10 ** decimals;
 };
+
 // get DXTS token Balance
 
 const getDxtsBalance = async (dxtsHodlAddress) => {
   const instance = await triggerSmartContract();
   const toDxtsSunBal = await instance.methods.balanceOf(dxtsHodlAddress).call();
-  const decimals = await dxtsDecimals();
-  const dxtsBal = fromDxtsSun(toDxtsSunBal, decimals);
-  return parseFloat(dxtsBal);
+  return parseFloat(toDxtsSunBal);
 };
 
 // token Transfer
@@ -136,7 +140,8 @@ const tokenTransfer = async (
   receiverAddress,
   tokenAmount,
   senderAddress,
-  PRIVATE_KEY_SENDER
+  PRIVATE_KEY_SENDER,
+  isPrivateKey
 ) => {
   // check both address
   const sender = validateAddress(senderAddress);
@@ -147,18 +152,20 @@ const tokenTransfer = async (
       message: "Invalid Address.",
     };
   }
-  // verify token Amount and tokenBalance Avail
+  // verify token Amount.
 
-  const senderAvailTokenBalance = await getDxtsBalance(senderAddress);
-  if (tokenAmount <= 0 || senderAvailTokenBalance < tokenAmount) {
+  if (!tokenAmount || tokenAmount <= 0) {
     return {
       status: false,
       message: "Incorrect token amount or Insufficeint Balance",
     };
   }
-
   // now you can send the tokens from with to.
   const instance = await triggerSmartContract();
+  let usedPrivateKey;
+  if(!isPrivateKey){
+    usedPrivateKey = await getPrivateKeyFromMnemonics();
+  }
   // send tokens but first set the privateKey of Sender to sign transaction.
   tronWeb.setPrivateKey(PRIVATE_KEY_SENDER);
 
@@ -182,6 +189,75 @@ const tokenTransfer = async (
   }
 };
 
+const getDxtsPriceInTrx = (trxAmountInUSD, destinySuccessAmountInUSD) => {
+  const dxtsPriceInTron =
+    parseFloat(trxAmountInUSD) / parseFloat(destinySuccessAmountInUSD);
+  return parseFloat(dxtsPriceInTron).toPrecision(6);
+};
+
+const getTronPriceInUSD = async () => {
+  try {
+    const tron = await axios.get("https://api.coingecko.com/api/v3/coins/tron");
+    const tronPriceInUSd = tron.data.market_data.current_price.usd;
+    return tronPriceInUSd;
+  } catch (err) {
+    return {
+      status: false,
+      message: err.message,
+    };
+  }
+};
+
+const getDestinyPriceInUSD = async () => {
+  try {
+    const destiny = await axios.get(
+      "https://api.coingecko.com/api/v3/coins/destiny-success"
+    );
+    const destinyPriceInUSd = destiny.data.market_data.current_price.usd;
+    return destinyPriceInUSd;
+  } catch (err) {
+    return {
+      status: false,
+      message: err.message,
+    };
+  }
+};
+
+var getTrxCoversionInDestiny = async (req, res) => {
+  const { tronAmount } = req.query;
+  try {
+    let pinginfo = await CoinGeckoClient.ping();
+    if (!pinginfo.code === 200) {
+      return res.json({
+        status: false,
+        message: "Unable to fetch the amount from API",
+      });
+    }
+
+    const tronPriceInUSd = await getTronPriceInUSD();
+    const destinyPriceInUsd = await getDestinyPriceInUSD();
+
+    var destinyPriceInTRX = getDxtsPriceInTrx(
+      tronPriceInUSd,
+      destinyPriceInUsd
+    );
+
+    return res.json({
+      status: true,
+      message: {
+        tronPriceInUSd,
+        destinyPriceInUsd,
+        destinyPriceInTRX,
+      },
+    });
+  } catch (err) {
+    return res.json({
+      status: false,
+      message: err.message,
+    });
+  }
+};
+
 module.exports = {
   createWallet,
   validateAddress,
@@ -192,4 +268,6 @@ module.exports = {
   tokenTransfer,
   fromDxtsSun,
   toDxtsSun,
+  getTrxCoversionInDestiny,
+  dxtsDecimals,
 };

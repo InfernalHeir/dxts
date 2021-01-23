@@ -19,6 +19,7 @@
     "morgan": "^1.10.0",
     "mysql2": "^2.1.0",
     "node-cron": "^2.0.3",
+    "pm2": "^4.5.1",
     "qrcode": "^1.4.4",
     "sequelize": "^5.21.13",
     "tronweb": "^3.2.3",
@@ -37,12 +38,11 @@
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1",
     "build": "export NODE_ENV=production && rimraf dist/ && babel ./ --out-dir dist/ --ignore ./node_modules,./.babelrc,./package.json,./npm-debug.log --copy-files",
-    "start": "npm run build && node dist/index.js",
-    "createDB": "sequelize db:create",
+    "start": "npm run build && pm2-runtime --json process.yml",
+    "create": "sequelize db:create",
     "migrations": "sequelize db:migrate",
     "seeders": "sequelize db:seed:all",
-    "dev": "nodemon index.js",
-    "tron": "node ./controller/tronWallet"
+    "dev": "nodemon index.js"
   },
   "author": "",
   "license": "ISC"

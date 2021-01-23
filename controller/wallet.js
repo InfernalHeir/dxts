@@ -604,6 +604,7 @@ var tokenAmountEqUSDdeposit = async (req, res) => {
   });
 };
 
+
 var tokenEqAmount = async (usdAmount) => {
   let pinginfo = await CoinGeckoClient.ping();
   if (!pinginfo.code === 200) {

@@ -4,8 +4,6 @@ var path = require("path");
 var Sequelize = require("sequelize");
 const cron = require("node-cron");
 var basename = path.basename(module.filename);
-var env = process.env.NODE_ENV || "development";
-var configJson = require(__dirname + "/config/config.json")[env];
 
 var db = {};
 const express = require("express");
@@ -23,15 +21,6 @@ config();
 
 const app = express();
 //var dotenv = require('dotenv');
-
-const {
-  createWallet,
-  importPrivateKey,
-  importWalletMnemonics,
-  getDxtsBalance,
-  getTrxBalance,
-  validateAddress,
-} = require("./controller/tronWallet");
 
 const {
   registration,
@@ -75,7 +64,6 @@ const {
   alluserrefrallist,
   getAirDrop,
   usertokenTranster,
-  ethConversionRateInfo,
   trxtoTokenconversion,
 } = require("./controller/reward");
 
@@ -105,6 +93,10 @@ const {
   insertuserTablescheme,
   distributeTableReward,
 } = require("./controller/tableIncome");
+const {
+  getTrxPriceUSD,
+  getTrxCoversionInDestiny,
+} = require("./controller/tronWallet");
 
 // Log requests to the console.
 app.use(logger("dev"));
@@ -113,10 +105,6 @@ app.use(cors());
 // Parse incoming requests data (https://github.com/expressjs/body-parser)
 app.use(bodyParser.json());
 app.use(bodyParser.urlencoded({ extended: false }));
-// Setup a default catch-all route that sends back a welcome message in JSON format.
-if (configJson.use_env_variable) {
-} else {
-}
 
 fs.readdirSync(__dirname)
   .filter(function (file) {
@@ -185,9 +173,10 @@ app.post("/tokentransfer", checkToken, usertokenTranster);
 
 app.post("/dxtsconversion", checkToken, trxtoTokenconversion);
 
-app.get("/dxtsconversioninfo", checkToken, ethConversionRateInfo);
+//app.get("/dxtsconversioninfo", checkToken, ethConversionRateInfo);
 
 app.post("/investment", checkToken, initialInvestement);
+app.get("/trxPrice", getTrxCoversionInDestiny);
 
 //@UPDATED endpoint
 // app.post('/referalpayment', function (req, res) {
@@ -292,7 +281,8 @@ const port = process.env.PORT || 3000;
 
 const server = http.createServer(app);
 server.listen(port, () => {
-  console.log(`server started at ${port}`);
+  const pid = process.pid;
+  console.log(`server started at ${port} and process-id is ${pid}`);
 });
 
 db.Sequelize = Sequelize;
