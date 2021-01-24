@@ -65,6 +65,8 @@ const {
   getAirDrop,
   usertokenTranster,
   trxtoTokenconversion,
+  ethConversionRateInfo,
+  trxConversionRateInfo,
 } = require("./controller/reward");
 
 const {
@@ -171,12 +173,14 @@ app.get("/userwithdrawableAmount", checkToken, userwithdrawableAmount);
 
 app.post("/tokentransfer", checkToken, usertokenTranster);
 
+// user can buy token with trx
 app.post("/dxtsconversion", checkToken, trxtoTokenconversion);
 
-//app.get("/dxtsconversioninfo", checkToken, ethConversionRateInfo);
+// this will give you conversion history
+app.get("/dxtsconversioninfo", checkToken, trxConversionRateInfo);
 
 app.post("/investment", checkToken, initialInvestement);
-app.get("/trxPrice", getTrxCoversionInDestiny);
+//app.get("/trxPrice", getTrxCoversionInDestiny);
 
 //@UPDATED endpoint
 // app.post('/referalpayment', function (req, res) {

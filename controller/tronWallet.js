@@ -7,16 +7,14 @@ const CoinGecko = require("coingecko-api");
 
 const CoinGeckoClient = new CoinGecko();
 
-const fullNode = new TronWeb.providers.HttpProvider(
-  "https://api.shasta.trongrid.io/"
-);
+const fullNode = new TronWeb.providers.HttpProvider("https://api.trongrid.io/");
 
 const solidityNode = new TronWeb.providers.HttpProvider(
-  "https://api.shasta.trongrid.io/"
+  "https://api.trongrid.io/"
 );
 
 const eventNode = new TronWeb.providers.HttpProvider(
-  "https://api.shasta.trongrid.io/"
+  "https://api.trongrid.io/"
 );
 
 const privateKeyOfMaintainer = process.env.ADMIN_PRIVATE_KEY;
@@ -163,7 +161,7 @@ const tokenTransfer = async (
   // now you can send the tokens from with to.
   const instance = await triggerSmartContract();
   let usedPrivateKey;
-  if(!isPrivateKey){
+  if (!isPrivateKey) {
     usedPrivateKey = await getPrivateKeyFromMnemonics();
   }
   // send tokens but first set the privateKey of Sender to sign transaction.
@@ -199,6 +197,7 @@ const getTronPriceInUSD = async () => {
   try {
     const tron = await axios.get("https://api.coingecko.com/api/v3/coins/tron");
     const tronPriceInUSd = tron.data.market_data.current_price.usd;
+    //console.log(tronPriceInUSd);
     return tronPriceInUSd;
   } catch (err) {
     return {
@@ -208,23 +207,27 @@ const getTronPriceInUSD = async () => {
   }
 };
 
-const getDestinyPriceInUSD = async () => {
+/* const getDestinyPriceInUSD = async () => {
   try {
     const destiny = await axios.get(
       "https://api.coingecko.com/api/v3/coins/destiny-success"
     );
-    const destinyPriceInUSd = destiny.data.market_data.current_price.usd;
-    return destinyPriceInUSd;
+    const destinyPriceInUSD = destiny.data.market_data.current_price.usd;
+    const destinyPriceInBTC = destiny.data.market_data.current_price.btc;
+    return {
+      destinyPriceInUSD,
+      destinyPriceInBTC,
+    };
   } catch (err) {
     return {
       status: false,
       message: err.message,
     };
   }
-};
+}; */
 
-var getTrxCoversionInDestiny = async (req, res) => {
-  const { tronAmount } = req.query;
+/* var getTrxCoversionInDestiny = async () => {
+  //const { tronAmount } = req.query;
   try {
     let pinginfo = await CoinGeckoClient.ping();
     if (!pinginfo.code === 200) {
@@ -234,29 +237,27 @@ var getTrxCoversionInDestiny = async (req, res) => {
       });
     }
 
-    const tronPriceInUSd = await getTronPriceInUSD();
-    const destinyPriceInUsd = await getDestinyPriceInUSD();
+    //const tronPriceInUSd = await getTronPriceInUSD();
+    const destiny = await getDestinyPriceInUSD();
 
     var destinyPriceInTRX = getDxtsPriceInTrx(
       tronPriceInUSd,
-      destinyPriceInUsd
+      destiny.destinyPriceInUSD
     );
 
-    return res.json({
+    return {
       status: true,
       message: {
-        tronPriceInUSd,
-        destinyPriceInUsd,
         destinyPriceInTRX,
       },
-    });
+    };
   } catch (err) {
     return res.json({
       status: false,
       message: err.message,
     });
   }
-};
+}; */
 
 module.exports = {
   createWallet,
@@ -268,6 +269,7 @@ module.exports = {
   tokenTransfer,
   fromDxtsSun,
   toDxtsSun,
-  getTrxCoversionInDestiny,
+  getTronPriceInUSD,
   dxtsDecimals,
+  getDxtsPriceInTrx,
 };

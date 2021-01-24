@@ -11,7 +11,14 @@ var utils = ethers.utils;
 var providers = ethers.providers;
 var Web3 = require("web3");
 var fs = require("fs");
-const { getDxtsBalance } = require("./tronWallet");
+const {
+  getDxtsBalance,
+  dxtsDecimals,
+  toDxtsSun,
+  fromDxtsSun,
+  getTronPriceInUSD,
+  getDxtsPriceInTrx,
+} = require("./tronWallet");
 const options = { transactionConfirmationBlocks: 1 };
 var web3 = new Web3(
   new Web3.providers.HttpProvider(
@@ -604,7 +611,6 @@ var tokenAmountEqUSDdeposit = async (req, res) => {
   });
 };
 
-
 var tokenEqAmount = async (usdAmount) => {
   let pinginfo = await CoinGeckoClient.ping();
   if (!pinginfo.code === 200) {
@@ -626,16 +632,19 @@ var tokenEqAmount = async (usdAmount) => {
 
   var tokenPrice = response.data.market_data.current_price.usd;
   var btctokenPrice = response.data.market_data.current_price.btc;
-  //var trxtokenPrice = response.data.market_data.current_price.trx;
+  var ethtokenPrice = response.data.market_data.current_price.eth;
   var tokenAmount = await usdtotokenconversion(usdAmount, tokenPrice);
 
+  var tronUsd = await getTronPriceInUSD();
+  var tronPrinceInDestiny = getDxtsPriceInTrx(tronUsd, tokenPrice);
+  console.log(tronPrinceInDestiny);
   return {
     status: true,
     message: "token Info",
     tokenAmount: tokenAmount,
     usdPrice: tokenPrice,
     btcPrice: btctokenPrice,
-    trxPrice: 0,
+    trxPrice: tronPrinceInDestiny,
   };
 };
 
@@ -692,11 +701,14 @@ var userWalletExist = async (uuid) => {
   var tokenBalance = await getDxtsBalance(
     user_wallet_Exist.dataValues.trx_user_walletaddress
   );
+
+  const decimals = await dxtsDecimals();
+  const toSunBalance = await fromDxtsSun(tokenBalance, decimals);
   return {
     status: true,
     walletAddress: user_wallet_Exist.dataValues.trx_user_walletaddress,
     //@TODO hard coded decimal value of tokens
-    tokenBalance: tokenBalance / 10 ** 18,
+    tokenBalance: toSunBalance,
   };
 };
 

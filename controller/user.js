@@ -32,6 +32,8 @@ const {
   validateAddress,
   getDxtsBalance,
   getTrxBalance,
+  dxtsDecimals,
+  fromDxtsSun,
 } = require("./tronWallet");
 
 const { insertuserTablescheme } = require("./tableIncome");
@@ -832,6 +834,7 @@ const userwalletBalance = async (req, res) => {
     },
   });
 
+  // give expection here for when wallet not exist
   if (!userExist) {
     return res.status(500).json({
       status: false,
@@ -839,12 +842,14 @@ const userwalletBalance = async (req, res) => {
     });
   }
 
+  // get token Balance
   var tokenBalance = await getDxtsBalance(userExist.trx_user_walletaddress);
-
+  var decimals = await dxtsDecimals();
+  var balance = fromDxtsSun(tokenBalance, decimals);
   return res.status(200).json({
     status: true,
     message: "Wallet Token Balance",
-    tokenBalance: tokenBalance,
+    tokenBalance: balance,
   });
 };
 
