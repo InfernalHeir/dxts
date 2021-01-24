@@ -12,9 +12,9 @@ const getConfig = () => {
     };
   } else {
     return {
-      username: process.env.DB_USER,
-      password: process.env.DB_PASSWORD,
-      database: process.env.DB_DATABASE,
+      username: root,
+      password: root,
+      database: "mlm",
       host: "13.126.63.235",
       dialect: "mysql",
       operatorsAliases: 0,
