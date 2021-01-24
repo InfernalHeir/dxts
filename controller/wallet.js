@@ -632,12 +632,12 @@ var tokenEqAmount = async (usdAmount) => {
 
   var tokenPrice = response.data.market_data.current_price.usd;
   var btctokenPrice = response.data.market_data.current_price.btc;
-  var ethtokenPrice = response.data.market_data.current_price.eth;
+  //var ethtokenPrice = response.data.market_data.current_price.eth;
   var tokenAmount = await usdtotokenconversion(usdAmount, tokenPrice);
 
   var tronUsd = await getTronPriceInUSD();
   var tronPrinceInDestiny = getDxtsPriceInTrx(tronUsd, tokenPrice);
-  console.log(tronPrinceInDestiny);
+  //console.log(tronPrinceInDestiny);
   return {
     status: true,
     message: "token Info",

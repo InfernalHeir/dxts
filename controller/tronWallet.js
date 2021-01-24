@@ -104,7 +104,8 @@ const importWalletMnemonics = async (mnemonic) => {
 // get TRX balance
 const getTrxBalance = async (address) => {
   const toSun = await tronWeb.trx.getBalance(address);
-  return toSun;
+  const fromSun = tronWeb.fromSun(toSun);
+  return fromSun;
 };
 
 // get decimals of dxts token

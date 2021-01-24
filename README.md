@@ -136,6 +136,26 @@ RESPONSE
 No changes with fields
 ```
 
+## Wallet Exist
+
+```
+GET /walletexist
+H Content-Type: application/json *
+H x-access-token: string (Required)
+or you can put also. use anyone your choice
+H authorization: string (Required)
+
+Query String
+// dont need to send any query string
+
+RESPONSE
+{
+    "status": true,
+    "walletAddress": "TTN6FswMcryeVGvtGmrGFCTYKVAZZuo..",
+    "tokenBalance": 0..
+}
+```
+
 ## Login
 
 ```
@@ -227,4 +247,86 @@ i have change this fields from response.
 eth_user_walletaddress-> trx_user_walletaddress
 eth_user_keys-> trx_user_keys
 eth_blockchain_txid-> trx_blockchain_txid
+```
+
+## tokenpriceinfo
+
+```
+GET /tokenpriceinfo
+H x-access-token: string (Required)
+or you can put also. use anyone your choice
+H authorization: string (Required)
+
+Query Stirng
+usdAmount: number
+
+RESPONSE
+{
+    "status": true,
+    "message": "Token price Info",
+    "data": {
+        "tokenAmount": "505.7446267794",
+        "usdAmount": "12",
+        "tokenPrice": 0.02372739
+    }
+}
+```
+
+## userwalletbalance
+
+```
+GET /userwalletbalance
+H x-access-token: string (Required)
+or you can put also. use anyone your choice
+H authorization: string (Required)
+
+Query Stirng
+// you dont need to send any query string
+
+RESPONSE
+{
+    "status": true,
+    "message": "Wallet Token Balance",
+    "tokenBalance": 0
+}
+```
+
+## dashboard
+
+```
+GET /dashboard
+H x-access-token: string (Required)
+or you can put also. use anyone your choice
+H authorization: string (Required)
+
+Query Stirng
+// you dont need to send any query string
+
+RESPONSE
+{
+    "status": true,
+    "message": "Dashboard Info",
+    "data": {
+        "status": "INITIAL",
+        "walletBalance": 0,
+        "amountInvested": null,
+        "incomeReferal": null,
+        "tableIncome": 0,
+        "monthlyROI": 0,
+        "withdrawalIncome": 0,
+        "principal_wallet": 0,
+        "profitbonous_wallet": 0,
+        "coold_wallet": 0,
+        "referalId": "123456789",
+        "directReferalCount": 0,
+        "totalIncome": 1,
+        "airDropDOllarAmount": 1,
+        "userUiid": "123456789",
+        "dxtusdrates": "0.02329592",
+        "dxtbtcrates": "7.252e-7",
+        "walletTrx": "0",
+        "qraddress": "data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAJQAAACUCAYAAAB1PADUAAAAAklEQVR4AewaftIAAATlSURBVO3BQY4jRxAEwfAC//9l1x7zVECjk6NZKczwj1QtOaladFK16KRq0UnVopOqRSdVi06qFp1ULTqpWnRSteikatFJ1aKTqkUnVYtOqhZ98hKQn6RmAjKpmYDcqPkmIDdqboD8JDVvnFQtOqladFK16JNlajYBuVEzAZnUfBOQGzUTkDfUbAKy6aRq0UnVopOqRZ98GZAn1PybgExqJiBPALkBMql5AsgTar7ppGrRSdWik6pFn/zlgNwAmdTcqJmAPKHmBsh/2UnVopOqRSdViz75nwEyqZmA3KiZgExAJjU3av5LTqoWnVQtOqla9MmXqflJam6AvAFkUnMDZFIzAZnUPKHmNzmpWnRSteikatEny4D8JkAmNROQSc0EZFIzAZnUfBOQ3+ykatFJ1aKTqkWfvKTmbwJkk5oJyKRmAjKpuVHzNzmpWnRSteikatEnLwGZ1DwBZFIzAdmkZgIyAbkBMqm5AfIEkE1qboBMat44qVp0UrXopGrRJy+pmYBMam7U3KjZBGRS801qJiBPqJmA3KiZgPykk6pFJ1WLTqoWffJlQCY1TwCZ1ExAbtQ8AeQNNTdqbtRMQCY1v9lJ1aKTqkUnVYs+eQnIpGYCMgF5Qs0mIJOaGzU/Ccik5gkgk5oJyKRm00nVopOqRSdViz55Sc0TaiYgk5oJyI2aCcg3AZnUTEB+EyA3QCY1b5xULTqpWnRSteiTZUAmNROQSc0EZFLzhJpNQCY1E5AbNTdAJjU3QG7UTEAmNd90UrXopGrRSdUi/CNfBGRSMwF5Q80EZFKzCcik5gbIpOYJIJOaJ4BMaiYgk5o3TqoWnVQtOqla9MkyIDdAJjUTkEnNBORGzQTkRs0NkDfUTEAmNTdqJiBPqJmAfNNJ1aKTqkUnVYs+eQnIE2qeADKpeULNBOQGyI2aCciNmieATGpu1LyhZtNJ1aKTqkUnVYs++TI1E5BJzY2aCciNmhs1N2pugExqboBMap4AcgPkNzmpWnRSteikatEnL6m5AXIDZFIzAblRMwGZ1NwA2QTkCSCTmgnIJjUTkEnNGydVi06qFp1ULcI/8oOA3Ki5AfKGmgnIjZoJyI2aJ4DcqJmATGomIJOaCciNmjdOqhadVC06qVr0yUtAnlDzBJBJzQRkUnMD5A01N0Bu1DwB5AbIpOYJNZtOqhadVC06qVr0yUtqvknNG0AmNTdAJiCTmgnIpGYCMgG5UfMEkBsgP+mkatFJ1aKTqkWfvATkJ6l5A8iNmhsgk5oJyCYgk5obIDdqJiCTmjdOqhadVC06qVr0yTI1m4DcqJmATGomIE8AmdQ8oWYC8oSaN9TcqNl0UrXopGrRSdWiT74MyBNqngAyqZmA3KiZgNwAmdRMaiYgTwDZBGRS800nVYtOqhadVC365C+nZgIyqZmATEBu1ExAJiCTmhs1N0AmNROQSc0TQCY1m06qFp1ULTqpWvTJ/4yaCcgbaiYgN0AmNZOaGzU3QCY1N0AmNW+cVC06qVp0UrXoky9T85sAuVEzAdmk5gkgk5oJyG9yUrXopGrRSdWiT5YB+UlAJjXfpGYCcqPmBsikZlLzTWo2nVQtOqladFK1CP9I1ZKTqkUnVYtOqhadVC06qVp0UrXopGrRSdWik6pFJ1WLTqoWnVQtOqladFK16KRq0T842TldXppCTAAAAABJRU5ErkJggg==",
+        "isActive": 1
+    }
+}
 ```

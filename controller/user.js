@@ -695,7 +695,11 @@ const dashBoardInfo = async (req, res) => {
 
   var tokenBalance = await getDxtsBalance(userExist.trx_user_walletaddress);
 
+  var decimals = await dxtsDecimals();
+  var balance = fromDxtsSun(tokenBalance, decimals);
+
   let tokensInfo = await tokenEqAmount("1");
+
   let usdprice, btcprice;
   if (tokensInfo.status) {
     (usdprice = tokensInfo.usdPrice), (btcprice = tokensInfo.btcPrice);
@@ -707,7 +711,7 @@ const dashBoardInfo = async (req, res) => {
   const generateQR = await QRCode.toDataURL(userExist.trx_user_walletaddress);
   var response = {
     status: userExist.account_status,
-    walletBalance: tokenBalance / 10 ** 18,
+    walletBalance: balance,
     amountInvested: userExist.dollar_amount_invested,
     incomeReferal: sumreferalIncome[0].rewardAmount,
     tableIncome: 0,
