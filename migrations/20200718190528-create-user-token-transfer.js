@@ -20,7 +20,7 @@ module.exports = {
       token_transfered: {
         type: Sequelize.FLOAT,
       },
-      ethereum_blockchain_txid: {
+      trx_blockchain_txid: {
         type: Sequelize.STRING,
       },
       createdAt: {

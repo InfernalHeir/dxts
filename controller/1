@@ -199,7 +199,6 @@ const usertokenTranster = async (req, res) => {
       });
     }
 
-   console.log('receiverAddress,------ ',receiverAddress,' ---- edgreg---------  ',tokentrasnsferAmount)
     // check user exist or not for their private keys.
     var userExist = await userModel.findOne({
       attributes: [
@@ -238,8 +237,8 @@ const usertokenTranster = async (req, res) => {
 
     //trx balance
     let availableTrx = await getTrxBalance(userExist.trx_user_walletaddress);
-console.log('availableTrx ---> ', availableTrx)
-    if (parseInt(availableTrx) <= 2) {
+
+    if (availableTrx <= 0) {
       return res.send({
         status: false,
         message: "Insufficient funds available  : For TRX Fees!",
@@ -257,7 +256,7 @@ console.log('availableTrx ---> ', availableTrx)
       senderAddress,
       PRIVATE_KEY_SENDER
     );
-console.log('tokenINfo---------------------------->    ',txInfo)
+
     if (txInfo && txInfo.status && txInfo.txId) {
       //Add the info inside the user_Investment model with  PENDING_TX state.
       await usertokentransfermoddel.create({
@@ -1175,7 +1174,7 @@ console.log('2');
       });
     }
 console.log('3');
-console.log('tokentransferAmount',tokentransferAmount);
+
     trxAmount = trxAmount * 10 ** 6;
     console.log('trxAmount',trxAmount);
     // transfer trx here.
@@ -1186,8 +1185,7 @@ console.log('tokentransferAmount',tokentransferAmount);
       userExist.trx_user_keys,
       ADMIN_TOKEN_TRANSFER_ADDR,
       ADMIN_TOKEN_TRANSFER_ADDR_PY_KEY,
-      tokentransferAmount,
-      user_uuid,
+      user_uuid
     );
     console.log('resp ------>', buyed);
     res.json(buyed);
@@ -1233,10 +1231,10 @@ const trxConversionRateInfo = async (req, res) => {
     }
 
     // excepted token received
-    var expecttokenreceived = parseFloat(
-      parseFloat(trx_available_for_token) * tokensInfo.trxPrice
+    var expecttokenreceived = parseInt(
+      parseFloat(trx_available_for_token) / tokensInfo.trxPrice
     );
-    console.log('=>=>>>>>>>>> expecttokenreceived ==== ',expecttokenreceived)
+
     tokensInfo["totalAvailableTrx"] = user_availableTrx;
     tokensInfo["trx_available_for_token"] = trx_available_for_token;
     tokensInfo["expectedTokenAmount"] = expecttokenreceived;

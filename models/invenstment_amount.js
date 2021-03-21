@@ -4,7 +4,6 @@ module.exports = (sequelize, DataTypes) => {
     "Invenstment_amount",
     {
       min_amount_dollar: DataTypes.INTEGER,
-      max_amount_dollar: DataTypes.INTEGER,
     },
     {}
   );

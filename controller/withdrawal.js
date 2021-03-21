@@ -248,7 +248,7 @@ const getpendingwithdrawalList = async (req, res) => {
   }
   var alluserInfo = await userModel.findAll({
     raw: true,
-    attributes: ["id", "uuid", "eth_user_walletaddress"],
+    attributes: ["id", "uuid", "trx_user_walletaddress"],
   });
 
   for (var i = 0; i < withdrawalusers.length; i++) {
@@ -256,7 +256,7 @@ const getpendingwithdrawalList = async (req, res) => {
     console.log("userRealtion", user);
     let userinfo = alluserInfo.find((x) => x.id == user.requesteduserId);
     (withdrawalusers[i]["requesteduseruuid"] = userinfo.uuid),
-      (withdrawalusers[i]["ethereumaddress"] = userinfo.eth_user_walletaddress);
+      (withdrawalusers[i]["trxaddress"] = userinfo.trx_user_walletaddress);
   }
   return res.json({
     status: true,
@@ -360,6 +360,7 @@ const updatependingwithdrawalstatus = async (req, res) => {
 };
 
 const withdrawalUserList = async (req, res) => {
+	console.log('===?>  req', req.uuid)
   var user_info = await userModel.findOne({
     raw: true,
     where: {
@@ -370,14 +371,14 @@ const withdrawalUserList = async (req, res) => {
       ],
     },
   });
-
+console.log('userInfo',user_info)
   var withdrawalList = await withdrawalRequestModel.findAll({
     where: {
       requesteduserId: user_info.id,
     },
   });
 
-  console.log("withdrawalList", withdrawalList);
+  console.log("withdrawalList=====>", withdrawalList);
 
   return res.status(200).json({
     status: true,

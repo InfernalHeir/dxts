@@ -7,7 +7,7 @@ module.exports = (sequelize, DataTypes) => {
       token_transfer_txid: DataTypes.STRING,
       trx_transfer_txid: DataTypes.STRING,
       token_transfer_status: DataTypes.STRING,
-      ether_tx_status: DataTypes.STRING,
+      trx_tx_status: DataTypes.STRING,
     },
     {}
   );

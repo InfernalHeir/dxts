@@ -4,18 +4,18 @@ const HDKey = require("hdkey");
 const fs = require("fs");
 const axios = require("axios");
 const CoinGecko = require("coingecko-api");
+const models = require("../models");
 
 const CoinGeckoClient = new CoinGecko();
+const userModel = models.User;
+const userEthmanagmentmodel = models.Eth_Managment;
 
-const fullNode = new TronWeb.providers.HttpProvider("https://api.trongrid.io/");
+const RPC = process.env.RPC;
+const fullNode = new TronWeb.providers.HttpProvider(RPC);
 
-const solidityNode = new TronWeb.providers.HttpProvider(
-  "https://api.trongrid.io/"
-);
+const solidityNode = new TronWeb.providers.HttpProvider(RPC);
 
-const eventNode = new TronWeb.providers.HttpProvider(
-  "https://api.trongrid.io/"
-);
+const eventNode = new TronWeb.providers.HttpProvider(RPC);
 
 const privateKeyOfMaintainer = process.env.ADMIN_PRIVATE_KEY;
 
@@ -26,205 +26,204 @@ const tronWeb = new TronWeb(
   privateKeyOfMaintainer
 );
 
+const abi = [
+  {
+    constant: true,
+    inputs: [],
+    name: "name",
+    outputs: [{ name: "", type: "string" }],
+    payable: false,
+    stateMutability: "view",
+    type: "function",
+  },
+  {
+    constant: false,
+    inputs: [
+      { name: "_spender", type: "address" },
+      { name: "_value", type: "uint256" },
+    ],
+    name: "approve",
+    outputs: [{ name: "success", type: "bool" }],
+    payable: false,
+    stateMutability: "nonpayable",
+    type: "function",
+  },
+  {
+    constant: true,
+    inputs: [],
+    name: "totalSupply",
+    outputs: [{ name: "", type: "uint256" }],
+    payable: false,
+    stateMutability: "view",
+    type: "function",
+  },
+  {
+    constant: true,
+    inputs: [],
+    name: "minimumFee",
+    outputs: [{ name: "", type: "uint256" }],
+    payable: false,
+    stateMutability: "view",
+    type: "function",
+  },
+  {
+    constant: false,
+    inputs: [
+      { name: "_from", type: "address" },
+      { name: "_to", type: "address" },
+      { name: "_value", type: "uint256" },
+    ],
+    name: "transferFrom",
+    outputs: [{ name: "success", type: "bool" }],
+    payable: false,
+    stateMutability: "nonpayable",
+    type: "function",
+  },
+  {
+    constant: true,
+    inputs: [],
+    name: "decimals",
+    outputs: [{ name: "", type: "uint8" }],
+    payable: false,
+    stateMutability: "view",
+    type: "function",
+  },
+  {
+    constant: true,
+    inputs: [],
+    name: "maximumFee",
+    outputs: [{ name: "", type: "uint256" }],
+    payable: false,
+    stateMutability: "view",
+    type: "function",
+  },
+  {
+    constant: false,
+    inputs: [
+      { name: "newBasisPoints", type: "uint256" },
+      { name: "newMaxFee", type: "uint256" },
+      { name: "newMinFee", type: "uint256" },
+    ],
+    name: "setParams",
+    outputs: [],
+    payable: false,
+    stateMutability: "nonpayable",
+    type: "function",
+  },
+  {
+    constant: true,
+    inputs: [{ name: "owner", type: "address" }],
+    name: "balanceOf",
+    outputs: [{ name: "", type: "uint256" }],
+    payable: false,
+    stateMutability: "view",
+    type: "function",
+  },
+  {
+    constant: true,
+    inputs: [],
+    name: "owner",
+    outputs: [{ name: "", type: "address" }],
+    payable: false,
+    stateMutability: "view",
+    type: "function",
+  },
+  {
+    constant: true,
+    inputs: [],
+    name: "symbol",
+    outputs: [{ name: "", type: "string" }],
+    payable: false,
+    stateMutability: "view",
+    type: "function",
+  },
+  {
+    constant: false,
+    inputs: [
+      { name: "_to", type: "address" },
+      { name: "_value", type: "uint256" },
+    ],
+    name: "transfer",
+    outputs: [],
+    payable: false,
+    stateMutability: "nonpayable",
+    type: "function",
+  },
+  {
+    constant: true,
+    inputs: [
+      { name: "_from", type: "address" },
+      { name: "_spender", type: "address" },
+    ],
+    name: "allowance",
+    outputs: [{ name: "remaining", type: "uint256" }],
+    payable: false,
+    stateMutability: "view",
+    type: "function",
+  },
+  {
+    constant: true,
+    inputs: [],
+    name: "basisPointsRate",
+    outputs: [{ name: "", type: "uint256" }],
+    payable: false,
+    stateMutability: "view",
+    type: "function",
+  },
+  {
+    inputs: [],
+    payable: false,
+    stateMutability: "nonpayable",
+    type: "constructor",
+  },
+  {
+    anonymous: false,
+    inputs: [
+      { indexed: true, name: "from", type: "address" },
+      { indexed: true, name: "to", type: "address" },
+      { indexed: false, name: "value", type: "uint256" },
+    ],
+    name: "Transfer",
+    type: "event",
+  },
+  {
+    anonymous: false,
+    inputs: [
+      { indexed: true, name: "_owner", type: "address" },
+      { indexed: true, name: "_spender", type: "address" },
+      { indexed: false, name: "_value", type: "uint256" },
+    ],
+    name: "Approval",
+    type: "event",
+  },
+  {
+    anonymous: false,
+    inputs: [
+      { indexed: false, name: "feeBasisPoints", type: "uint256" },
+      { indexed: false, name: "maximumFee", type: "uint256" },
+      { indexed: false, name: "minimumFee", type: "uint256" },
+    ],
+    name: "Params",
+    type: "event",
+  },
+  {
+    anonymous: false,
+    inputs: [{ indexed: false, name: "amount", type: "uint256" }],
+    name: "Issue",
+    type: "event",
+  },
+  {
+    anonymous: false,
+    inputs: [{ indexed: false, name: "amount", type: "uint256" }],
+    name: "Redeem",
+    type: "event",
+  },
+];
+
 const triggerSmartContract = async () => {
   // intreact with ABI files
   // contract interaction in tronweb
-
-  const abi = [
-    {
-      constant: true,
-      inputs: [],
-      name: "name",
-      outputs: [{ name: "", type: "string" }],
-      payable: false,
-      stateMutability: "view",
-      type: "function",
-    },
-    {
-      constant: false,
-      inputs: [
-        { name: "_spender", type: "address" },
-        { name: "_value", type: "uint256" },
-      ],
-      name: "approve",
-      outputs: [{ name: "success", type: "bool" }],
-      payable: false,
-      stateMutability: "nonpayable",
-      type: "function",
-    },
-    {
-      constant: true,
-      inputs: [],
-      name: "totalSupply",
-      outputs: [{ name: "", type: "uint256" }],
-      payable: false,
-      stateMutability: "view",
-      type: "function",
-    },
-    {
-      constant: true,
-      inputs: [],
-      name: "minimumFee",
-      outputs: [{ name: "", type: "uint256" }],
-      payable: false,
-      stateMutability: "view",
-      type: "function",
-    },
-    {
-      constant: false,
-      inputs: [
-        { name: "_from", type: "address" },
-        { name: "_to", type: "address" },
-        { name: "_value", type: "uint256" },
-      ],
-      name: "transferFrom",
-      outputs: [{ name: "success", type: "bool" }],
-      payable: false,
-      stateMutability: "nonpayable",
-      type: "function",
-    },
-    {
-      constant: true,
-      inputs: [],
-      name: "decimals",
-      outputs: [{ name: "", type: "uint8" }],
-      payable: false,
-      stateMutability: "view",
-      type: "function",
-    },
-    {
-      constant: true,
-      inputs: [],
-      name: "maximumFee",
-      outputs: [{ name: "", type: "uint256" }],
-      payable: false,
-      stateMutability: "view",
-      type: "function",
-    },
-    {
-      constant: false,
-      inputs: [
-        { name: "newBasisPoints", type: "uint256" },
-        { name: "newMaxFee", type: "uint256" },
-        { name: "newMinFee", type: "uint256" },
-      ],
-      name: "setParams",
-      outputs: [],
-      payable: false,
-      stateMutability: "nonpayable",
-      type: "function",
-    },
-    {
-      constant: true,
-      inputs: [{ name: "owner", type: "address" }],
-      name: "balanceOf",
-      outputs: [{ name: "", type: "uint256" }],
-      payable: false,
-      stateMutability: "view",
-      type: "function",
-    },
-    {
-      constant: true,
-      inputs: [],
-      name: "owner",
-      outputs: [{ name: "", type: "address" }],
-      payable: false,
-      stateMutability: "view",
-      type: "function",
-    },
-    {
-      constant: true,
-      inputs: [],
-      name: "symbol",
-      outputs: [{ name: "", type: "string" }],
-      payable: false,
-      stateMutability: "view",
-      type: "function",
-    },
-    {
-      constant: false,
-      inputs: [
-        { name: "_to", type: "address" },
-        { name: "_value", type: "uint256" },
-      ],
-      name: "transfer",
-      outputs: [],
-      payable: false,
-      stateMutability: "nonpayable",
-      type: "function",
-    },
-    {
-      constant: true,
-      inputs: [
-        { name: "_from", type: "address" },
-        { name: "_spender", type: "address" },
-      ],
-      name: "allowance",
-      outputs: [{ name: "remaining", type: "uint256" }],
-      payable: false,
-      stateMutability: "view",
-      type: "function",
-    },
-    {
-      constant: true,
-      inputs: [],
-      name: "basisPointsRate",
-      outputs: [{ name: "", type: "uint256" }],
-      payable: false,
-      stateMutability: "view",
-      type: "function",
-    },
-    {
-      inputs: [],
-      payable: false,
-      stateMutability: "nonpayable",
-      type: "constructor",
-    },
-    {
-      anonymous: false,
-      inputs: [
-        { indexed: true, name: "from", type: "address" },
-        { indexed: true, name: "to", type: "address" },
-        { indexed: false, name: "value", type: "uint256" },
-      ],
-      name: "Transfer",
-      type: "event",
-    },
-    {
-      anonymous: false,
-      inputs: [
-        { indexed: true, name: "_owner", type: "address" },
-        { indexed: true, name: "_spender", type: "address" },
-        { indexed: false, name: "_value", type: "uint256" },
-      ],
-      name: "Approval",
-      type: "event",
-    },
-    {
-      anonymous: false,
-      inputs: [
-        { indexed: false, name: "feeBasisPoints", type: "uint256" },
-        { indexed: false, name: "maximumFee", type: "uint256" },
-        { indexed: false, name: "minimumFee", type: "uint256" },
-      ],
-      name: "Params",
-      type: "event",
-    },
-    {
-      anonymous: false,
-      inputs: [{ indexed: false, name: "amount", type: "uint256" }],
-      name: "Issue",
-      type: "event",
-    },
-    {
-      anonymous: false,
-      inputs: [{ indexed: false, name: "amount", type: "uint256" }],
-      name: "Redeem",
-      type: "event",
-    },
-  ];
-
-  const contractAddress = "THcQ2jUys38gp46M8p3HwwZ2dxivA8fvgK";
+  const contractAddress = process.env.CONTRACT_ADDRESS;
   const contract = await tronWeb.contract(abi, contractAddress);
   return contract;
 };
@@ -313,7 +312,7 @@ const fromDxtsSun = (unit, decimals) => {
 };
 
 //toDxtsSun converter
-const toDxtsSun = (uint, decimals) => {
+const toDxtsSun = (unit, decimals) => {
   return unit * 10 ** decimals;
 };
 
@@ -331,50 +330,52 @@ const tokenTransfer = async (
   receiverAddress,
   tokenAmount,
   senderAddress,
-  PRIVATE_KEY_SENDER,
-  isPrivateKey
+  PRIVATE_KEY_SENDER
 ) => {
   // check both address
-  const sender = validateAddress(senderAddress);
-  const receiver = validateAddress(receiverAddress);
-  if (!(sender && receiver)) {
-    return {
-      status: false,
-      message: "Invalid Address.",
-    };
-  }
-  // verify token Amount.
-
-  if (!tokenAmount || tokenAmount <= 0) {
-    return {
-      status: false,
-      message: "Incorrect token amount or Insufficeint Balance",
-    };
-  }
-  // now you can send the tokens from with to.
-  const instance = await triggerSmartContract();
-  let usedPrivateKey;
-  if (!isPrivateKey) {
-    usedPrivateKey = await getPrivateKeyFromMnemonics();
-  }
-  // send tokens but first set the privateKey of Sender to sign transaction.
-  tronWeb.setPrivateKey(PRIVATE_KEY_SENDER);
-
-  // now you can invoke contract methods
   try {
-    const txObj = await instance.methods
-      .transfer(receiverAddress, tokenAmount)
+    const sender = validateAddress(senderAddress);
+    const receiver = validateAddress(receiverAddress);
+
+    if (!sender || !receiver) {
+      return {
+        status: false,
+        message: "Invalid Address.",
+      };
+    }
+    // verify token Amount.
+
+    if (!tokenAmount || tokenAmount <= 0) {
+      return {
+        status: false,
+        message: "Incorrect token amount or Insufficeint Balance",
+      };
+    }
+    // now you can send the tokens from with to.
+    const instance = await triggerSmartContract();
+
+    // send tokens but first set the privateKey of Sender to sign transaction.
+    tronWeb.setPrivateKey(PRIVATE_KEY_SENDER);
+
+    // now you can invoke contract methods
+    var senderHex = tronWeb.address.toHex(senderAddress);
+    var receiverHex = tronWeb.address.toHex(receiverAddress);
+
+    const txId = await instance.methods
+      .transfer(receiverHex, tokenAmount)
       .send({
-        from: senderAddress,
+        from: senderHex,
+        feeLimit: 50000000,
       });
 
     return {
-      status: "success",
-      message: txObj,
+      status: true,
+      txId: txId,
     };
   } catch (err) {
+    console.log(err);
     return {
-      status: "failed",
+      status: false,
       message: err.message,
     };
   }
@@ -452,6 +453,107 @@ const getTronPriceInUSD = async () => {
   }
 }; */
 
+const buyTokensWithTrx = async (
+  senderAddress,
+  receiverAddress,
+  trxAmount,
+  PRIVATE_KEY_USER_SENDER,
+  ADMIN_TOKEN_TRANSFER_ADDR,
+  ADMIN_TOKEN_TRANSFER_ADDR_PY_KEY,
+  tokenAmount,
+  UUID
+) => {
+  try {
+    console.log('tokenAmount', tokenAmount);
+    // validate here addresses
+    const sender = validateAddress(senderAddress);
+    const receiver = validateAddress(receiverAddress);
+
+    if (!(sender && receiver)) {
+      return {
+        status: false,
+        message: "Invalid Address.",
+      };
+    } // if close
+
+    // validate trx amount.
+    if (!trxAmount || trxAmount <= 0) {
+      return {
+        status: false,
+        message: "Incorrect trx amount",
+      };
+    }
+   console.log('Sender--->    ', sender,'   receiver ----->',receiver, '  amount ------?', trxAmount );
+    // set the Private key here
+
+    // now send trx amount to the admin
+    var txObj;
+
+    var trxObj = await tronWeb.trx.sendTransaction(
+      receiverAddress,
+      trxAmount,
+      PRIVATE_KEY_USER_SENDER
+    );
+    console.log('trxObj ===========------->',trxObj);
+
+    if (trxObj.result && trxObj.transaction.txID) {
+      // store this on user management.
+      await userEthmanagmentmodel.create({
+        userId: UUID,
+        trx_transfer_txid: trxObj.transaction.txID,
+        trx_tx_status: "SUCCESS",
+      });
+
+      // now send the equliment tokens to user.
+      txObj = await tokenTransfer(
+        senderAddress,
+        tokenAmount,
+        ADMIN_TOKEN_TRANSFER_ADDR,
+        ADMIN_TOKEN_TRANSFER_ADDR_PY_KEY
+      );
+
+      // this will not done yet,
+      // update the
+      if (txObj && txObj.status && txObj.txId) {
+        // update the userEthmanagmentmodel
+        await userEthmanagmentmodel.update(
+          {
+            token_transfer_txid: txObj.txId,
+          },
+          { where: { trx_transfer_txid: trxObj.transaction.txID } }
+        );
+
+        return {
+          status: true,
+          message: "Transaction Submitted!",
+        };
+      } else {
+        await userEthmanagmentmodel.update(
+          {
+            token_transfer_status: "ERROR",
+          },
+          { where: { trx_transfer_txid: trxObj.transaction.txID } }
+        );
+        return {
+          status: true,
+          message: "Transaction Failed !",
+        };
+      }
+    } // if end
+    else {
+      return {
+        status: false,
+        message: "Something Wrong Went!",
+      };
+    }
+  } catch (err) {
+    return {
+      status: false,
+      message: err.message,
+    };
+  }
+};
+
 module.exports = {
   createWallet,
   validateAddress,
@@ -465,4 +567,5 @@ module.exports = {
   getTronPriceInUSD,
   dxtsDecimals,
   getDxtsPriceInTrx,
+  buyTokensWithTrx,
 };

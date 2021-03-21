@@ -14,13 +14,13 @@ module.exports = {
       token_transfer_txid: {
         type: Sequelize.STRING,
       },
-      ether_transfer_txid: {
+      trx_transfer_txid: {
         type: Sequelize.STRING,
       },
       token_transfer_status: {
         type: Sequelize.STRING,
       },
-      ether_tx_status: {
+      trx_tx_status: {
         type: Sequelize.STRING,
       },
       createdAt: {

@@ -23,7 +23,7 @@ module.exports = {
       account_status: {
         type: Sequelize.STRING,
       },
-      ethereum_blockchain_txid: {
+      trx_blockchain_txid: {
         type: Sequelize.STRING,
       },
       createdAt: {

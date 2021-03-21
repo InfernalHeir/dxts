@@ -136,47 +136,77 @@ cron.schedule(" 1 23 * * * ", function () {
   }
 });
 
+// get Sample UUID
 app.get("/getsampleuuid", generatesampleuuid);
 
+// check referral Exist
 app.get("/referralexist", isReferralExist);
 
+// registration with valid credentials
 app.post("/registration", registration);
 
+// reset login with phasepharse.
 app.post("/reset", reset);
 
+// login with valid credentials.
 app.post("/login", login);
 
+// check if user wallet exist or not.
 app.get("/walletexist", checkToken, isWalletExist);
 
+// wallet import it will carry logic
 app.put("/walletimport", checkToken, importWalletInfo);
 
+// create wallet
 app.post("/walletcreate", checkToken, createWalletInfo);
 
+// get secure wallet keys.
 app.get("/walletkeys", checkToken, userMnemonicKeys);
 
+// get user team
 app.get("/userteam", checkToken, alluserrefrallist);
 
-//@TODO only admin
+//@TODO only admin yeah :)
 app.get("/alluserprofile", checkToken, alluserProfileList);
 
-//@TODO only admin
+//@TODO only admin yeah :) for unlocked id.
 app.put("/reactivate", checkToken, updateaccesstatus);
+
+// get user level list
 app.get("/userlevellist", checkToken, userLevelList);
 
+// get all user level list
 app.get("/alluserlevellist", checkToken, alluserLevelList);
 
+// token Price information
+// req.query = usdAmount;
 app.get("/tokenpriceinfo", checkToken, tokenAmountEqUSDdeposit);
 
+// get user token wallet balance
+// response shape
+/**
+ {
+  "status": true,
+  "message": "Wallet Token Balance",
+  "tokenBalance": 1000
+}
+ */
 app.get("/userwalletbalance", checkToken, userwalletBalance);
 
+// get user withdrawal amount
 app.get("/userwithdrawableAmount", checkToken, userwithdrawableAmount);
 
+// token transfer with each other.
+// body receiverAddress
+// body tokentrasnsferAmount
+// it will through error for now.
 app.post("/tokentransfer", checkToken, usertokenTranster);
 
-// user can buy token with trx
+// user can buy token with trx this will not done yet,
 app.post("/dxtsconversion", checkToken, trxtoTokenconversion);
 
 // this will give you conversion history
+// dxts conversion info
 app.get("/dxtsconversioninfo", checkToken, trxConversionRateInfo);
 
 app.post("/investment", checkToken, initialInvestement);
@@ -194,6 +224,7 @@ app.get("/dashboard", checkToken, dashBoardInfo);
 app.post("/addticket", checkToken, addsupportTicket);
 
 app.get("/usertotalincome", checkToken, usertotalIncome);
+
 app.post("/profitbonouswithdrawal", checkToken, profitbonuswalletWithdrawal);
 
 app.post("/principalwithdrawal", checkToken, principalwalletWithdrawal);
@@ -238,43 +269,6 @@ app.post("/news", checkToken, addnews);
 app.get("/news", checkToken, getlatestnews);
 
 app.get("/allnews", checkToken, getallnewslist);
-
-// tron api checking
-
-/* app.get("/createTronAccount", async (req, res) => {
-  try {
-    const keyStore = await createWallet();
-    console.log("keyStore", keyStore);
-    res.json(keyStore);
-  } catch (err) {
-    console.log(err);
-  }
-});
-
-app.get("/getTrxBal/:address", async (req, res) => {
-  const tronAccount = req.params.address;
-  console.log(tronAccount);
-  const getBalance = await getTrxBalance(tronAccount);
-  res.send(`${getBalance} TRX`);
-});
-
-app.get("/importPriv/:privateKey", async (req, res) => {
-  const privateKey = req.params.privateKey;
-  console.log(privateKey);
-  const keyStore = await importPrivateKey(privateKey);
-  res.json(keyStore);
-}); */
-
-/* app.get("/importMnemonics", async (req, res) => {
-  const mnemonics = req.query.mnemonices;
-  console.log(mnemonics);
-  const keyStore = await importWalletMnemonics(mnemonics, (err, result) => {
-    if (err) {
-      return res.send(err.message);
-    }
-    res.json(result);
-  });
-}); */
 
 cron.schedule(" 1 23 * * * ", function () {
   distributeTableReward();

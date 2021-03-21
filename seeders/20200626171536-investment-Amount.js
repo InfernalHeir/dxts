@@ -1,4 +1,4 @@
-'use strict';
+"use strict";
 
 module.exports = {
   up: (queryInterface, Sequelize) => {
@@ -13,13 +13,17 @@ module.exports = {
       }], {});
     */
 
-    return queryInterface.bulkInsert('Invenstment_amounts', [{
-      min_amount_dollar: 50,
-      max_amount_dollar: 5000,
-      createdAt: new Date(),
-      updatedAt: new Date()
-    }], {});
-
+    return queryInterface.bulkInsert(
+      "Invenstment_amounts",
+      [
+        {
+          min_amount_dollar: 100,
+          createdAt: new Date(),
+          updatedAt: new Date(),
+        },
+      ],
+      {}
+    );
   },
 
   down: (queryInterface, Sequelize) => {
@@ -30,5 +34,5 @@ module.exports = {
       Example:
       return queryInterface.bulkDelete('People', null, {});
     */
-  }
+  },
 };

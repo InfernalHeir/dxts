@@ -548,67 +548,64 @@ const tranferTokens = async (
   }
 };
 
-//Return the euivakent amount of tokens to be deposited in for usd investment.
+//Return the equvilent amount of tokens to be deposited in for usd investment.
 
 var tokenAmountEqUSDdeposit = async (req, res) => {
-  const { usdAmount } = req.query;
+  try {
+    const { usdAmount } = req.query;
 
-  if (!usdAmount || usdAmount <= 0) {
+    if (!usdAmount || usdAmount <= 0) {
+      return res.json({
+        status: false,
+        message: "Please provide valid amount usd",
+      });
+    }
+
+    let pinginfo = await CoinGeckoClient.ping();
+
+    if (!pinginfo.code === 200) {
+      return res.json({
+        status: false,
+        message: "Unable to fetch the amount from API",
+      });
+    }
+
+    var response = await axios.get(
+      "https://api.coingecko.com/api/v3/coins/destiny-success"
+    );
+
+    if (!response.code === 200) {
+      return res.json({
+        status: false,
+        message: "Unable to fetch the amount from API",
+      });
+    }
+
+    var tokenPrice = response.data.market_data.current_price.usd;
+
+    // let coinInfo = await CoinGeckoClient.coins.fetch('destiny-success', {});
+    // if (coinInfo.code === 200) {
+    //     tokenPrice = coinInfo.data.market_data.current_price.usd;
+    // }
+
+    var tokenAmount = await usdtotokenconversion(usdAmount, tokenPrice);
+
     return res.json({
-      status: false,
-      message: "Please provide valid amount usd",
-    });
-  }
-
-  let pinginfo = await CoinGeckoClient.ping();
-  if (!pinginfo.code === 200) {
-    return res.json({
-      status: false,
-      message: "Unable to fetch the amount from API",
-    });
-  }
-
-  // curl -X GET "https://api.coingecko.com/api/v3/coins/destiny-success" -H "accept: applicatiojson"
-  //https://api.coingecko.com/api/v3/coins/destiny-success
-
-  /**
-     *  {
-        "id": "destiny-success",
-        "symbol": "dxts",
-        "name": "Destiny Success"
+      status: true,
+      message: "Token price Info",
+      data: {
+        tokenAmount: tokenAmount,
+        usdAmount: usdAmount,
+        tokenPrice: tokenPrice,
+        // coinInfo : coinInfo
       },
-     */
-
-  var response = await axios.get(
-    "https://api.coingecko.com/api/v3/coins/destiny-success"
-  );
-
-  if (!response.code === 200) {
+    });
+  } catch (err) {
     return res.json({
       status: false,
-      message: "Unable to fetch the amount from API",
+      message: err.message,
     });
   }
-
-  var tokenPrice = response.data.market_data.current_price.usd;
-
-  // let coinInfo = await CoinGeckoClient.coins.fetch('destiny-success', {});
-  // if (coinInfo.code === 200) {
-  //     tokenPrice = coinInfo.data.market_data.current_price.usd;
-  // }
-
-  var tokenAmount = await usdtotokenconversion(usdAmount, tokenPrice);
-
-  return res.json({
-    status: true,
-    message: "Token price Info",
-    data: {
-      tokenAmount: tokenAmount,
-      usdAmount: usdAmount,
-      tokenPrice: tokenPrice,
-      // coinInfo : coinInfo
-    },
-  });
 };
 
 var tokenEqAmount = async (usdAmount) => {

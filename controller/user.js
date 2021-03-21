@@ -506,7 +506,6 @@ const importWalletInfo = async (req, res) => {
     }
 
     // check user Wallet existance
-
     var isWalletAlready = await userWalletExist(req.uuid);
     if (isWalletAlready.status) {
       return res.json({
@@ -625,7 +624,7 @@ const dashBoardInfo = async (req, res) => {
     });
   }
 
-  console.log("userExist", userExist);
+  // console.log("userExist", userExist);
 
   var ReferalCount = await userRealtionModel.findAndCountAll({
     raw: true,
@@ -635,7 +634,7 @@ const dashBoardInfo = async (req, res) => {
     },
   });
 
-  console.log("ReferalCount", ReferalCount);
+  //console.log("ReferalCount", ReferalCount);
 
   var sumreferalIncome = await db.sequelize.query(
     ' select sum(rewardAmount) as rewardAmount from Rewards where Rewards.to = (:id) and type = "REFERRAL"',
@@ -700,9 +699,11 @@ const dashBoardInfo = async (req, res) => {
 
   let tokensInfo = await tokenEqAmount("1");
 
-  let usdprice, btcprice;
+  let usdprice, btcprice, trxPrice;
   if (tokensInfo.status) {
-    (usdprice = tokensInfo.usdPrice), (btcprice = tokensInfo.btcPrice);
+    (usdprice = tokensInfo.usdPrice),
+      (btcprice = tokensInfo.btcPrice),
+      (trxPrice = tokensInfo.trxPrice);
   }
   var walletTrx = await getTrxBalance(userExist.trx_user_walletaddress);
 
@@ -727,6 +728,7 @@ const dashBoardInfo = async (req, res) => {
     userUiid: userExist.uuid,
     dxtusdrates: usdprice.toString(),
     dxtbtcrates: btcprice.toString(),
+    dxtstrxrates: trxPrice.toString(),
     walletTrx: walletTrx.toString(),
     qraddress: generateQR,
     isActive: userExist.isActive,
@@ -831,30 +833,39 @@ const admindashBoardInfo = async (req, res) => {
 
 // user Wallet Balance
 const userwalletBalance = async (req, res) => {
-  var userExist = await userModel.findOne({
-    raw: true,
-    where: {
-      uuid: req.uuid,
-    },
-  });
+  try {
+    // check user exist or not
+    var userExist = await userModel.findOne({
+      raw: true,
+      where: {
+        uuid: req.uuid,
+      },
+    });
 
-  // give expection here for when wallet not exist
-  if (!userExist) {
+    // give expection here for when wallet not exist
+    if (!userExist || !userExist.trx_user_walletaddress) {
+      return res.status(500).json({
+        status: false,
+        message: "Something went wrong",
+      });
+    }
+
+    // get token Balance
+    var tokenBalance = await getDxtsBalance(userExist.trx_user_walletaddress);
+    var decimals = await dxtsDecimals();
+    var balance = fromDxtsSun(tokenBalance, decimals);
+    return res.status(200).json({
+      status: true,
+      message: "Wallet Token Balance",
+      tokenBalance: balance,
+    });
+    // the end of try block.
+  } catch (err) {
     return res.status(500).json({
       status: false,
-      message: "Something went wrong",
+      message: err.message,
     });
   }
-
-  // get token Balance
-  var tokenBalance = await getDxtsBalance(userExist.trx_user_walletaddress);
-  var decimals = await dxtsDecimals();
-  var balance = fromDxtsSun(tokenBalance, decimals);
-  return res.status(200).json({
-    status: true,
-    message: "Wallet Token Balance",
-    tokenBalance: balance,
-  });
 };
 
 const userwithdrawableAmount = async (req, res) => {
