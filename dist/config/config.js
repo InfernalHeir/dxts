@@ -1,7 +1,7 @@
 const env = process.env.NODE_ENV;
 
 const getConfig = () => {
-  
+
   if (env === "development") {
     return {
       username: "root",
@@ -9,7 +9,7 @@ const getConfig = () => {
       database: "mlm",
       host: "127.0.0.1",
       dialect: "mysql",
-      operatorsAliases: 0,
+      operatorsAliases: 0
     };
   } else {
     return {
@@ -18,7 +18,7 @@ const getConfig = () => {
       database: process.env.DB_DATABASE,
       host: '13.232.16.114',
       dialect: "mysql",
-      operatorsAliases: 0,
+      operatorsAliases: 0
     };
   }
 };

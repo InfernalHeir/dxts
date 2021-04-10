@@ -1,0 +1,9 @@
+apps:
+  - script: ./dist/index.js
+    name: "API-SERVER"
+    instances: -1
+    exec_mode: cluster
+    max_memory_restart: 100M
+    combine_logs: true
+    cwd: /usr/src/app
+    watch: true

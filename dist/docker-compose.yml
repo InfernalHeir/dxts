@@ -1,0 +1,43 @@
+version: "3"
+services:
+  nginx:
+    container_name: nginx_proxy
+    image: nginx_proxy:1.0.0
+    volumes:
+      - ./nginx/domain/dxts.conf:/etc/nginx/conf.d/dxts.conf
+    ports:
+      - "80:80"
+    links:
+      - api
+    restart: on-failure
+    networks:
+      - dxtsOne
+
+  api:
+    container_name: api_container_node
+    image: apiserver:1.0.0
+    ports:
+      - 3000:3000
+    volumes:
+      - ./package.json:/usr/src/app/package.json
+    env_file: .env
+    restart: on-failure
+    links:
+      - mysql
+    networks:
+      - dxtsOne
+
+  mysql:
+    container_name: mysql_container
+    image: mysql:latest
+    ports:
+      - 3306:3306
+    volumes:
+      - ./mysql/vol:/var/lib/mysql
+    env_file: ./mysql/.env-file
+    restart: always
+    networks:
+      - dxtsOne
+networks:
+  dxtsOne:
+    external: true
