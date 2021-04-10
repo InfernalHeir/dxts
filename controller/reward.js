@@ -295,7 +295,7 @@ const initialInvestement = async (req, res) => {
   // amount invested in Doller;
   let { amount_invested } = req.body;
 
-  // Min-Max Investment to verify
+  /* // Min-Max Investment to verify
   var minInvestment = await investmentAmountModel.findOne({
     attributes: ["min_amount_dollar"],
     raw: true,
@@ -303,17 +303,18 @@ const initialInvestement = async (req, res) => {
       // Will escape title and validate DESC against a list of valid direction parameters
       ["createdAt", "DESC"],
     ],
-  });
+  }); */
 
   // dont worry this will not exposed on production
   // verify invested usd
+  const MINIMUM_AMOUNT_INVESTMENT = 0.1;
   if (
     !amount_invested ||
-    !(minInvestment.min_amount_dollar <= amount_invested)
+    !(MINIMUM_AMOUNT_INVESTMENT <= amount_invested)
   ) {
     return res.json({
       status: false,
-      message: `Minimum Investment Amount is ${minInvestment.min_amount_dollar} USD`,
+      message: `Minimum Investment Amount is ${MINIMUM_AMOUNT_INVESTMENT} USD`,
     });
   }
 

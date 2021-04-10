@@ -464,7 +464,6 @@ const tranferTokens = async (
     }
     var accounts;
     console.log("isprivatekey", isprivatekey);
-    console.log("PRIVATE_KEY_SENDER", PRIVATE_KEY_SENDER);
     if (isprivatekey == false) {
       var wallet = new ethers.Wallet.fromMnemonic(PRIVATE_KEY_SENDER);
       console.log("wallet---from ethers--mnemanic ----", wallet);
